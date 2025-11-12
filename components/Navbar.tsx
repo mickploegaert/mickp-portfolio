@@ -38,11 +38,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${
-      scrolled 
-        ? 'bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-200' 
-        : 'bg-transparent'
-    }`}>
+    <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-lg border-b border-gray-200">
       {/* Logo */}
       <div 
         className="text-[32px] text-black cursor-pointer hover:opacity-70 transition-opacity duration-200" 
@@ -63,11 +59,7 @@ export default function Navbar() {
           <a
             key={item.href}
             href={item.href}
-            className={`relative text-[20px] transition-all duration-200 hover:opacity-70 ${
-              activeSection === item.href.slice(1) 
-                ? 'text-black font-bold' 
-                : 'text-black/80 hover:text-black'
-            }`}
+            className="relative text-[20px] text-black transition-all duration-200 hover:opacity-70"
             style={{
               fontFamily: 'Inter, sans-serif',
               letterSpacing: '-0.05em',
@@ -75,9 +67,6 @@ export default function Navbar() {
             }}
           >
             {item.label}
-            {activeSection === item.href.slice(1) && (
-              <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-black rounded-full" />
-            )}
           </a>
         ))}
       </div>

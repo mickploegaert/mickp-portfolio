@@ -1,32 +1,29 @@
-"use client";
-
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface DiscordUser {
   id: string;
   username: string;
-  discriminator: string;
-  avatar?: string;
   global_name?: string;
-  display_name?: string;
+  avatar?: string;
+  discriminator?: string;
 }
 
-interface DiscordActivity {
-  name: string;
+interface Activity {
   type: number;
+  name: string;
   details?: string;
   state?: string;
-  application_id?: string;
   timestamps?: {
     start?: number;
     end?: number;
   };
   assets?: {
     large_image?: string;
-    large_text?: string;
     small_image?: string;
+    large_text?: string;
     small_text?: string;
   };
+  application_id?: string;
   emoji?: {
     id?: string;
     name?: string;
@@ -34,43 +31,39 @@ interface DiscordActivity {
   };
 }
 
-interface DiscordData {
-  discord_user: DiscordUser;
-  discord_status: string;
-  activities: DiscordActivity[];
-  listening_to_spotify: boolean;
-  spotify?: {
-    track_id: string;
-    song: string;
-    artist: string;
-    album: string;
-    album_art_url: string;
-    timestamps: {
-      start: number;
-      end: number;
-    };
+interface SpotifyData {
+  song: string;
+  artist: string;
+  album: string;
+  album_art_url?: string;
+  timestamps?: {
+    start: number;
+    end: number;
   };
-  active_on_discord_desktop: boolean;
-  active_on_discord_mobile: boolean;
-  active_on_discord_web: boolean;
 }
 
 interface PresenceData {
-  d?: DiscordData | { [key: string]: DiscordData };
-  success?: boolean;
-  data?: DiscordData;
-  t?: string;
+  discord_user: DiscordUser;
+  discord_status: 'online' | 'idle' | 'dnd' | 'offline';
+  activities: Activity[];
+  listening_to_spotify: boolean;
+  spotify?: SpotifyData;
+  active_on_discord_desktop?: boolean;
+  active_on_discord_mobile?: boolean;
+  active_on_discord_web?: boolean;
+  display_name?: string;
 }
 
-export default function DiscordProfile({ userId = '719831189585657877' }: { userId?: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
+export default function DiscordLanyard({ userId = '719831189585657877' }: { userId?: string }) {
+  const [presenceData, setPresenceData] = useState<PresenceData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<DiscordData | null>(null);
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [loading, setLoading] = useState(true);
+  const socketRef = useRef<WebSocket | null>(null);
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const dataTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalsRef = useRef<NodeJS.Timeout[]>([]);
 
-  // Helper functions moved outside useEffect
-  const formatElapsedTime = (startTimestamp: number): string => {
+  const formatElapsedTime = (startTimestamp: number) => {
     const now = Date.now();
     let elapsed = Math.floor((now - startTimestamp) / 1000);
     const hours = Math.floor(elapsed / 3600);
@@ -79,42 +72,51 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatSongTime = (ms: number): string => {
+  const formatSongTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const getActivityIcon = (activity: DiscordActivity): string | null => {
-    if (activity.assets && activity.assets.large_image) {
+  const getActivityIcon = (activity: Activity) => {
+    if (activity.assets?.large_image) {
       let imageUrl = activity.assets.large_image;
-      
+
       if (imageUrl.startsWith('spotify:')) {
         const spotifyId = imageUrl.replace('spotify:', '');
         return `https://i.scdn.co/image/${spotifyId}`;
       }
-      
+
       if (imageUrl.startsWith('mp:external/')) {
         const match = imageUrl.match(/https\/(.*)/i);
-        if (match && match[1]) {
+        if (match?.[1]) {
           return `https://${match[1]}`;
         }
         return null;
       }
-      
+
       if (!imageUrl.startsWith('http')) {
         return `https://cdn.discordapp.com/app-assets/${activity.application_id}/${imageUrl}.png`;
       }
-      
+
       return imageUrl;
     }
-    
     return null;
   };
 
-  const getUserAvatar = (data: DiscordData): string | null => {
-    if (data.discord_user && data.discord_user.avatar) {
+  const getStatusInfo = (status: string) => {
+    const statusMap: Record<string, { bgColor: string; text: string; dotColor: string }> = {
+      online: { bgColor: 'bg-green-500', text: 'Online', dotColor: 'bg-green-500' },
+      idle: { bgColor: 'bg-yellow-500', text: 'Idle', dotColor: 'bg-yellow-500' },
+      dnd: { bgColor: 'bg-red-500', text: 'Do Not Disturb', dotColor: 'bg-red-500' },
+      offline: { bgColor: 'bg-gray-500', text: 'Offline', dotColor: 'bg-gray-500' },
+    };
+    return statusMap[status] || statusMap.offline;
+  };
+
+  const getUserAvatar = (data: PresenceData) => {
+    if (data.discord_user?.avatar) {
       const avatarId = data.discord_user.avatar;
       const userId = data.discord_user.id;
       const format = avatarId.startsWith('a_') ? 'gif' : 'png';
@@ -123,436 +125,426 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
     return null;
   };
 
-  // Update time every second for live timestamps
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    let isMounted = true;
 
-  useEffect(() => {
-    let hasReceivedData = false;
-    let lastValidData: DiscordData | null = null;
-    let socket: WebSocket | null = null;
-    let heartbeatInterval: NodeJS.Timeout | null = null;
-    let retryCount = 0;
-    const maxRetries = 3;
-
-    // Helper functions
-    const formatElapsedTime = (startTimestamp: number): string => {
-      const now = Date.now();
-      let elapsed = Math.floor((now - startTimestamp) / 1000);
-      const hours = Math.floor(elapsed / 3600);
-      const minutes = Math.floor((elapsed % 3600) / 60);
-      const seconds = elapsed % 60;
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    };
-
-    const formatSongTime = (ms: number): string => {
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    };
-
-    const getActivityIcon = (activity: DiscordActivity): string | null => {
-      if (activity.assets && activity.assets.large_image) {
-        let imageUrl = activity.assets.large_image;
-        
-        if (imageUrl.startsWith('spotify:')) {
-          const spotifyId = imageUrl.replace('spotify:', '');
-          return `https://i.scdn.co/image/${spotifyId}`;
-        }
-        
-        if (imageUrl.startsWith('mp:external/')) {
-          const match = imageUrl.match(/https\/(.*)/i);
-          if (match && match[1]) {
-            return `https://${match[1]}`;
-          }
-          return null;
-        }
-        
-        if (!imageUrl.startsWith('http')) {
-          return `https://cdn.discordapp.com/app-assets/${activity.application_id}/${imageUrl}.png`;
-        }
-        
-        return imageUrl;
+    const cleanup = () => {
+      if (socketRef.current) {
+        socketRef.current.close();
       }
-      
-      return null;
-    };
-
-    const getUserAvatar = (data: DiscordData): string | null => {
-      if (data.discord_user && data.discord_user.avatar) {
-        const avatarId = data.discord_user.avatar;
-        const userId = data.discord_user.id;
-        const format = avatarId.startsWith('a_') ? 'gif' : 'png';
-        return `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.${format}?size=128`;
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
       }
-      return null;
-    };
-
-    const updatePresenceUI = (presenceData: DiscordData) => {
-      if (!presenceData || !containerRef.current) return;
-      
-      hasReceivedData = true;
-      lastValidData = presenceData;
-      setData(presenceData);
-      setLoading(false);
-      setError(null);
-
-      try {
-        localStorage.setItem('discord_presence_data', JSON.stringify({
-          timestamp: Date.now(),
-          data: presenceData
-        }));
-      } catch (e) {
-        console.warn('Failed to cache Discord presence data:', e);
+      if (dataTimeoutRef.current) {
+        clearTimeout(dataTimeoutRef.current);
       }
+      intervalsRef.current.forEach(interval => clearInterval(interval));
+      intervalsRef.current = [];
     };
 
-    const showErrorState = (errorMessage: string) => {
-      if (!containerRef.current) return;
-      
-      setError(errorMessage || "Error connecting to Lanyard");
-      setLoading(false);
-      setData(null);
-    };
+    const initializeConnection = () => {
+      setLoading(true);
 
-    // Try to load cached data
-    try {
-      const cachedData = localStorage.getItem('discord_presence_data');
+      // Try cached data first
+      const cachedData = typeof window !== 'undefined' ? localStorage?.getItem('discord_presence_data') : null;
       if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        const timestamp = parsed.timestamp;
-        const data = parsed.data;
-        
-        const oneHourAgo = Date.now() - (60 * 60 * 1000);
-        if (timestamp > oneHourAgo && data) {
-          console.log('Using cached Discord presence data');
-          lastValidData = data;
-          updatePresenceUI(data);
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to load cached Discord presence data:', e);
-    }
-
-    const connectWebSocket = () => {
-      if (retryCount >= maxRetries) {
-        showErrorState("Max retries reached. Please check if your Discord ID is correct and privacy settings allow data sharing.");
-        return;
-      }
-
-      retryCount++;
-      console.log(`Connecting to Lanyard API (attempt ${retryCount}/${maxRetries})`);
-
-      // Initialize WebSocket connection
-      socket = new WebSocket('wss://api.lanyard.rest/socket');
-      
-      const dataTimeout = setTimeout(() => {
-        if (!hasReceivedData) {
-          if (lastValidData) {
-            updatePresenceUI(lastValidData);
-          } else {
-            // Try REST API as fallback
-            fetchInitialData();
+        try {
+          const parsed = JSON.parse(cachedData);
+          const oneHourAgo = Date.now() - 60 * 60 * 1000;
+          if (parsed.timestamp > oneHourAgo && parsed.data) {
+            if (isMounted) {
+              setPresenceData(parsed.data);
+              setLoading(false);
+            }
           }
+        } catch (e) {
+          console.warn('Failed to load cached data:', e);
         }
-      }, 8000); // Reduced timeout
+      }
 
-      socket.addEventListener('open', () => {
-        console.log('WebSocket connected');
-        socket?.send(JSON.stringify({
+      // Set timeout for data
+      const timeout = setTimeout(() => {
+        if (isMounted && !presenceData) {
+          setError('Timeout waiting for Discord data');
+          setLoading(false);
+        }
+      }, 10000);
+      dataTimeoutRef.current = timeout;
+
+      // Fetch initial data
+      fetch(`https://api.lanyard.rest/v1/users/${userId}`, {
+        mode: 'cors',
+        headers: { 'Accept': 'application/json' },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (isMounted && data.success) {
+            setPresenceData(data.data);
+            setError(null);
+            setLoading(false);
+            if (dataTimeoutRef.current) clearTimeout(dataTimeoutRef.current);
+            if (typeof window !== 'undefined') {
+              localStorage?.setItem('discord_presence_data', JSON.stringify({
+                timestamp: Date.now(),
+                data: data.data,
+              }));
+            }
+          }
+        })
+        .catch(err => {
+          console.error('Fetch error:', err);
+          if (isMounted) {
+            setError('Failed to load Discord data');
+            setLoading(false);
+          }
+        });
+
+      // WebSocket connection
+      socketRef.current = new WebSocket('wss://api.lanyard.rest/socket');
+
+      socketRef.current.addEventListener('open', () => {
+        socketRef.current?.send(JSON.stringify({
           op: 2,
           d: { subscribe_to_ids: [userId] },
         }));
 
-        heartbeatInterval = setInterval(() => {
-          socket?.send(JSON.stringify({ op: 3 }));
+        heartbeatRef.current = setInterval(() => {
+          socketRef.current?.send(JSON.stringify({ op: 3 }));
         }, 30000);
       });
 
-      socket.addEventListener('message', (event) => {
-        const message: PresenceData = JSON.parse(event.data);
-
+      socketRef.current.addEventListener('message', event => {
+        const message = JSON.parse(event.data);
         if (message.t === 'INIT_STATE' || message.t === 'PRESENCE_UPDATE') {
-          clearTimeout(dataTimeout);
-          
-          if (message.d && (message.d as { [key: string]: DiscordData })[userId]) {
-            updatePresenceUI((message.d as { [key: string]: DiscordData })[userId]);
-          } else if (message.d && !(message.d as { [key: string]: DiscordData })[userId]) {
-            updatePresenceUI(message.d as DiscordData);
-          } else if (lastValidData) {
-            updatePresenceUI(lastValidData);
+          const data = message.d?.[userId] || message.d;
+          if (isMounted && data) {
+            setPresenceData(data);
+            setError(null);
+            setLoading(false);
+            if (dataTimeoutRef.current) clearTimeout(dataTimeoutRef.current);
           }
         }
       });
 
-      socket.addEventListener('error', (error) => {
-        console.error('WebSocket error:', error);
-        clearTimeout(dataTimeout);
-        if (lastValidData) {
-          console.warn("WebSocket error, but using cached data");
-          updatePresenceUI(lastValidData);
-        } else if (retryCount < maxRetries) {
-          setTimeout(connectWebSocket, 2000 * retryCount); // Exponential backoff
-        } else {
-          showErrorState("WebSocket connection failed. Please check your Discord privacy settings.");
-        }
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
-      });
-
-      socket.addEventListener('close', () => {
-        console.log('WebSocket closed');
-        if (heartbeatInterval) clearInterval(heartbeatInterval);
-        if (!hasReceivedData && retryCount < maxRetries) {
-          setTimeout(connectWebSocket, 2000 * retryCount);
+      socketRef.current.addEventListener('error', () => {
+        console.warn('WebSocket error');
+        if (isMounted) {
+          setError('Connection error');
         }
       });
     };
 
-    // Fetch initial data from REST API as fallback
-    const fetchInitialData = async () => {
-      try {
-        console.log('Fetching initial data from REST API');
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch(`https://api.lanyard.rest/v1/users/${userId}`, {
-          signal: controller.signal,
-          mode: 'cors',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('REST API response:', result);
-        
-        if (result.success) {
-          hasReceivedData = true;
-          updatePresenceUI(result.data);
-        } else {
-          throw new Error('API returned success: false');
-        }
-      } catch (error) {
-        console.error('Error fetching initial data:', error);
-        if (retryCount >= maxRetries) {
-          showErrorState(`Failed to fetch Discord data: ${error instanceof Error ? error.message : 'Unknown error'}. Make sure your Discord ID (${userId}) is correct and your Discord privacy settings allow data sharing.`);
-        }
-      }
-    };
-    
-    // Start connection
-    connectWebSocket();
+    initializeConnection();
 
-    // Cleanup
-    return () => {
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
-      if (socket) socket.close();
-    };
+    return cleanup;
   }, [userId]);
 
-  // Render loading state
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl w-[440px] shadow-xl overflow-hidden text-gray-800 flex-shrink-0 self-start border border-gray-200">
-        <div className="relative">
-          <div className="h-28 bg-cover bg-center" style={{ backgroundImage: 'url(https://dcdn.dstn.to/banners/719831189585657877)' }}></div>
-          <div className="p-6 border-b border-gray-200 pb-8">
-            <div className="flex items-center">
-              <div className="w-28 h-28 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold text-4xl mr-6 border-4 border-white -mt-16 shadow-lg overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                  <span className="text-gray-600">M</span>
-                </div>
-              </div>
-              <div className="mt-2">
-                <div className="text-3xl font-extrabold text-black">MickP</div>
-                <div className="text-lg text-gray-500 font-medium">Coding in VSCode</div>
-              </div>
+      <div className="bg-white rounded-xl w-96 shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300">
+        <div className="h-24 bg-gray-200" />
+        <div className="p-6 border-b border-gray-300">
+          <div className="flex items-center">
+            <div className="w-24 h-24 rounded-full bg-gray-200 -mt-14 animate-pulse" />
+            <div className="ml-5 mt-2 flex-1">
+              <div className="h-7 w-40 bg-gray-200 rounded animate-pulse mb-2" />
+              <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
             </div>
           </div>
         </div>
-        <div className="p-6 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-lg font-medium text-gray-700">Currently working on projects</span>
-          </div>
+        <div className="p-6 text-center text-gray-600 flex items-center justify-center">
+          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Loading Discord presence...
         </div>
       </div>
     );
   }
 
-  // Render error state
-  if (error) {
+  if (error || !presenceData) {
     return (
-      <div className="bg-white rounded-2xl w-[440px] shadow-xl overflow-hidden text-gray-800 flex-shrink-0 self-start border border-gray-200">
-        <div className="relative">
-          <div className="h-28 bg-cover bg-center" style={{ backgroundImage: 'url(https://dcdn.dstn.to/banners/719831189585657877)' }}></div>
-          <div className="p-6 border-b border-gray-200 pb-8">
-            <div className="flex items-center">
-              <div className="w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-2xl mr-4 border-4 border-white -mt-12 shadow-lg">
-                !
-              </div>
-              <div className="mt-2">
-                <div className="text-xl font-semibold text-black flex items-center">
-                  Error<span className="ml-2 px-2 py-1 bg-red-100 text-red-600 text-sm rounded">Connection Failed</span>
-                </div>
-                <div className="flex items-center text-sm mt-1">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gray-500 mr-2"></div>
-                  {error}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="p-6 text-center text-gray-500">
-          <p>Could not connect to Discord presence service.</p>
-          <button 
-            className="mt-2 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors" 
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </button>
+      <div className="bg-white rounded-xl w-96 shadow-xl overflow-hidden text-black flex-shrink-0">
+        <div className="p-6 text-center">
+          <div className="text-lg font-semibold text-red-600 mb-2">Connection Error</div>
+          <p className="text-sm text-gray-600">{error || 'Could not load Discord presence'}</p>
         </div>
       </div>
     );
   }
 
-  // Render success state
-  if (!data) return null;
+  const displayName = presenceData.display_name || presenceData.discord_user?.global_name || presenceData.discord_user?.username || 'User';
+  const username = presenceData.discord_user?.username || 'User';
+  const discriminator = presenceData.discord_user?.discriminator && presenceData.discord_user.discriminator !== '0' ? `#${presenceData.discord_user.discriminator}` : '';
+  const avatarUrl = getUserAvatar(presenceData);
+  const statusInfo = getStatusInfo(presenceData.discord_status);
 
-  const avatarUrl = data.discord_user.avatar ? 
-    `https://cdn.discordapp.com/avatars/${data.discord_user.id}/${data.discord_user.avatar}.${data.discord_user.avatar.startsWith('a_') ? 'gif' : 'png'}?size=128` : 
-    null;
-  const username = data.discord_user.username || 'User';
-  const globalName = data.discord_user.global_name || null;
-  const displayName = data.discord_user.display_name || globalName || username;
-  const discriminator = data.discord_user.discriminator ? `#${data.discord_user.discriminator}` : '';
-  const status = data.discord_status || 'offline';
+  // Separate Spotify from other activities
+  const spotifyActivity = presenceData.listening_to_spotify && presenceData.spotify;
+  const otherActivities = presenceData.activities?.filter(a => a.name !== 'Spotify') || [];
 
   return (
-    <div ref={containerRef} className="bg-white rounded-2xl w-[440px] shadow-xl overflow-hidden text-gray-800 flex-shrink-0 self-start border border-gray-200 hover:shadow-2xl transition-all duration-300">
+    <div className="bg-white rounded-xl w-96 shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
+      <style>{`
+        .spotify-eq-bg .eq-bar {
+          width: 18%;
+          margin: 0 1%;
+          border-radius: 0;
+          animation: eqbar-up 1.1s infinite;
+          background: #1DB954;
+          opacity: 0.6;
+          align-self: flex-end;
+          height: var(--eq-base, 60%);
+        }
+        .spotify-eq-bg .eq-bar:nth-child(1) { animation-delay: 0s; }
+        .spotify-eq-bg .eq-bar:nth-child(2) { animation-delay: 0.12s; }
+        .spotify-eq-bg .eq-bar:nth-child(3) { animation-delay: 0.24s; }
+        .spotify-eq-bg .eq-bar:nth-child(4) { animation-delay: 0.18s; }
+        .spotify-eq-bg .eq-bar:nth-child(5) { animation-delay: 0.3s; }
+        .spotify-eq-bg .eq-bar:nth-child(6) { animation-delay: 0.08s; }
+        .spotify-eq-bg .eq-bar:nth-child(7) { animation-delay: 0.2s; }
+        .spotify-eq-bg .eq-bar:nth-child(8) { animation-delay: 0.32s; }
+        .spotify-eq-bg .eq-bar:nth-child(9) { animation-delay: 0.16s; }
+        @keyframes eqbar-up {
+          0%, 100% { height: var(--eq-base, 60%); }
+          20% { height: calc(var(--eq-base, 60%) + 60%); }
+          40% { height: calc(var(--eq-base, 60%) + 30%); }
+          60% { height: calc(var(--eq-base, 60%) + 50%); }
+          80% { height: calc(var(--eq-base, 60%) + 20%); }
+        }
+      `}</style>
+
       <div className="relative">
-        <div className="h-28 bg-cover bg-center" style={{ backgroundImage: 'url(https://dcdn.dstn.to/banners/719831189585657877)' }}></div>
-        <div className="p-6 border-b border-gray-200 pb-8">
+        <div className="h-24 bg-cover bg-center bg-gray-200" style={{ backgroundImage: "url('https://dcdn.dstn.to/banners/719831189585657877')" }} />
+        
+        <div className="p-6 border-b border-gray-300 pb-7">
           <div className="flex items-center">
-            <div className="relative w-28 h-28 mr-6 -mt-16">
-              <div className="w-full h-full rounded-full overflow-hidden border-4 border-white bg-gray-300 shadow-lg flex items-center justify-center text-white font-bold text-4xl">
-                {avatarUrl ? 
-                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" /> : 
+            <div className="relative w-24 h-24 mr-5 -mt-14">
+              <div className="w-full h-full rounded-full overflow-hidden border-4 border-white/80 bg-gray-300 shadow-lg flex items-center justify-center text-black font-bold text-3xl">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
                   displayName.charAt(0)
-                }
+                )}
               </div>
-              <span className={`absolute -bottom-1 right-2 w-7 h-7 rounded-full border-4 border-white ${
-                status === 'online' ? 'bg-green-500' :
-                status === 'idle' ? 'bg-yellow-400' :
-                status === 'dnd' ? 'bg-red-500' :
-                'bg-gray-500'
-              }`}></span>
+              <span className={`absolute -bottom-1 right-2 w-6 h-6 rounded-full border-4 border-white ${statusInfo.dotColor}`} />
             </div>
+            
             <div className="mt-2">
-              <div className="text-3xl font-extrabold text-black">
+              <div className="text-2xl font-extrabold text-black drop-shadow-sm">
                 {displayName}
-                <span className="text-gray-500 text-lg font-medium ml-2">({username}{discriminator !== '#0' ? discriminator : ''})</span>
+                <span className="text-gray-600 text-base italic font-medium ml-2">({username}{discriminator})</span>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {spotifyActivity && (
+        <SpotifyActivity spotify={presenceData.spotify!} formatSongTime={formatSongTime} />
+      )}
+
+      {otherActivities.length > 0 ? (
+        otherActivities.map((activity, idx) => (
+          <ActivityItem key={idx} activity={activity} index={idx} formatElapsedTime={formatElapsedTime} getActivityIcon={getActivityIcon} />
+        ))
+      ) : !spotifyActivity ? (
+        <div className="p-4 text-center text-gray-600">No activities right now</div>
+      ) : null}
+    </div>
+  );
+}
+
+function SpotifyActivity({ spotify, formatSongTime }: {
+  spotify: SpotifyData;
+  formatSongTime: (ms: number) => string;
+}) {
+  const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState('0:00');
+  const [total, setTotal] = useState('0:00');
+
+  useEffect(() => {
+    if (spotify.timestamps) {
+      const updateProgress = () => {
+        const now = Date.now();
+        const totalMs = spotify.timestamps!.end - spotify.timestamps!.start;
+        const elapsedMs = Math.max(0, Math.min(now - spotify.timestamps!.start, totalMs));
+        const percent = Math.min(100, (elapsedMs / totalMs) * 100);
+        
+        setProgress(percent);
+        setElapsed(formatSongTime(elapsedMs));
+        setTotal(formatSongTime(totalMs));
+      };
+
+      updateProgress();
+      const interval = setInterval(updateProgress, 200);
+      return () => clearInterval(interval);
+    }
+  }, [spotify, formatSongTime]);
+
+  return (
+    <div className="p-3 hover:bg-gray-100 transition-colors duration-200 border-t border-green-600/70 shadow-md relative overflow-hidden">
+      <div className="absolute left-0 right-0 bottom-0 h-10 flex items-end pointer-events-none z-0 spotify-eq-bg">
+        <div className="flex h-full w-full items-end justify-between gap-0.5">
+          {[60, 80, 40, 90, 70, 55, 65, 50, 85].map((height, i) => (
+            <div key={i} className="eq-bar" style={{ '--eq-base': `${height}%` } as React.CSSProperties} />
+          ))}
         </div>
       </div>
       
-      {/* Spotify Activity */}
-      {data.listening_to_spotify && data.spotify && (
-        <div className="p-4 hover:bg-gray-50 transition-all duration-200 border-t border-gray-200 relative overflow-hidden">
-          <div className="flex items-start relative z-10">
-            <div className="flex-shrink-0 mr-4">
-              {data.spotify.album_art_url ? 
-                <img src={data.spotify.album_art_url} alt="Album Art" className="w-20 h-20 rounded-xl object-cover shadow-lg" /> : 
-                <div className="w-20 h-20 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                  </svg>
-                </div>
-              }
+      <div className="flex items-start relative z-10">
+        <div className="flex-shrink-0 mr-3">
+          {spotify.album_art_url ? (
+            <img src={spotify.album_art_url} alt="Album Art" className="w-16 h-16 rounded object-cover" />
+          ) : (
+            <div className="w-16 h-16 bg-[#1DB954] rounded flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+              </svg>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center mb-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                <svg className="w-5 h-5 text-green-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                </svg>
-                <div className="text-lg font-bold text-black">Listening to Spotify</div>
-              </div>
-              <div className="text-base text-gray-800 font-medium mb-1">{data.spotify.song}</div>
-              <div className="text-sm text-gray-600 mb-1">by {data.spotify.artist}</div>
-              <div className="text-sm text-gray-500 mb-2">on {data.spotify.album}</div>
-              {data.spotify.timestamps && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{formatSongTime(currentTime - data.spotify.timestamps.start)}</span>
-                  <div className="flex-1 h-1 bg-gray-300 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-green-500 transition-all duration-1000"
-                      style={{ 
-                        width: `${((currentTime - data.spotify.timestamps.start) / (data.spotify.timestamps.end - data.spotify.timestamps.start)) * 100}%` 
-                      }}
-                    />
-                  </div>
-                  <span>{formatSongTime(data.spotify.timestamps.end - data.spotify.timestamps.start)}</span>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
-      )}
 
-      {/* Other Activities */}
-      {data.activities.filter(a => a.name !== 'Spotify' && a.type !== 4).map((activity, idx) => (
-        <div key={idx} className="p-4 hover:bg-gray-50 transition-all duration-200 border-t border-gray-200">
-          <div className="flex items-start">
-            <div className="flex-shrink-0 mr-4">
-              {getActivityIcon(activity) ? 
-                <img src={getActivityIcon(activity)!} alt={activity.name} className="w-20 h-20 rounded-xl object-cover shadow-lg" /> : 
-                <div className="w-20 h-20 bg-gray-400 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg">
-                  {activity.name.charAt(0).toUpperCase()}
-                </div>
-              }
-            </div>
-            <div className="flex-1">
-              <div className="text-lg font-bold text-black mb-1">Playing {activity.name}</div>
-              {activity.details && <div className="text-base text-gray-800 font-medium mb-1">{activity.details}</div>}
-              {activity.state && <div className="text-sm text-gray-600">{activity.state}</div>}
-              {activity.timestamps?.start && (
-                <div className="text-xs text-gray-500 mt-2 flex items-center">
-                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  {formatElapsedTime(activity.timestamps.start)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {!data.listening_to_spotify && data.activities.filter(a => a.name !== 'Spotify' && a.type !== 4).length === 0 && (
-        <div className="p-6 text-center text-gray-500">
-          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-[#1DB954]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
             </svg>
+            <div className="font-semibold text-green-600 drop-shadow-sm">Listening to Spotify</div>
           </div>
-          <p className="text-lg font-medium text-gray-600">No activities right now</p>
+          <div className="text-sm text-black font-medium mt-1">{spotify.song}</div>
+          <div className="text-xs text-gray-700">by {spotify.artist}</div>
+          <div className="text-xs text-gray-700 mb-2">on {spotify.album}</div>
+          
+          <div className="mt-2 mb-2">
+            <div className="bg-gray-300 h-1.5 rounded-full w-full overflow-hidden">
+              <div className="bg-green-500 h-full rounded-full transition-all" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          
+          <div className="flex justify-between text-xs text-gray-700">
+            <span>{elapsed}</span>
+            <span>{total}</span>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
+}
+
+function ActivityItem({ activity, index, formatElapsedTime, getActivityIcon }: {
+  activity: Activity;
+  index: number;
+  formatElapsedTime: (ts: number) => string;
+  getActivityIcon: (activity: Activity) => string | null;
+}) {
+  const [elapsed, setElapsed] = useState('00:00:00');
+
+  useEffect(() => {
+    if (activity.timestamps?.start) {
+      setElapsed(formatElapsedTime(activity.timestamps.start));
+      const interval = setInterval(() => {
+        setElapsed(formatElapsedTime(activity.timestamps!.start!));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [activity, formatElapsedTime]);
+
+  const activityIcon = getActivityIcon(activity);
+  
+  const activityTypeMap: Record<number, string> = {
+    0: 'Playing',
+    1: 'Streaming',
+    2: 'Listening to',
+    3: 'Watching',
+    4: 'Custom Status:',
+    5: 'Competing in',
+  };
+
+  const activityType = activityTypeMap[activity.type] || 'Using';
+
+  // Check if it's a coding activity
+  const codeNames = ['Visual Studio Code', 'VS Code', 'WebStorm', 'Code', 'Cursor', 'IntelliJ IDEA', 'PhpStorm', 'PyCharm', 'Rider', 'Vim'];
+  const isCoding = codeNames.some(name => 
+    activity.name?.toLowerCase().includes(name.toLowerCase()) ||
+    activity.details?.toLowerCase().includes(name.toLowerCase()) ||
+    activity.state?.toLowerCase().includes(name.toLowerCase())
+  );
+
+  return (
+    <div className="p-3 hover:bg-gray-100 transition-colors duration-200 border-t border-gray-600/70 shadow-md relative overflow-hidden">
+      <div className="flex items-start relative z-10">
+        <div className="flex-shrink-0 mr-3">
+          {activityIcon ? (
+            <img src={activityIcon} alt={activity.name} className="w-16 h-16 rounded object-cover" />
+          ) : (
+            <div className="w-16 h-16 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
+              {activity.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1">
+          <div className="font-semibold text-black drop-shadow-sm">
+            {isCoding ? '💻 Coding in' : activityType} {activity.name}
+          </div>
+          
+          {isCoding && activity.details && (
+            <div className="text-sm text-gray-700 italic mt-1">
+              📄 {activity.details}
+            </div>
+          )}
+          
+          {activity.state && (
+            <div className="text-sm text-gray-700 italic">
+              {activity.state}
+            </div>
+          )}
+
+          {activity.details && !isCoding && (
+            <div className="text-sm text-gray-700 italic">
+              {activity.details}
+            </div>
+          )}
+          
+          {activity.timestamps?.start && (
+            <div className="text-xs text-gray-600 mt-2 flex items-center">
+              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              ⏱️ {elapsed}
+            </div>
+          )}
+
+          {activity.assets?.small_image && (
+            <div className="mt-2 flex items-center">
+              <img 
+                src={getSmallImageUrl(activity.assets.small_image, activity.application_id)} 
+                alt="Icon" 
+                className="w-4 h-4 rounded-full mr-1"
+              />
+              <span className="text-xs text-gray-600">{activity.assets.small_text || ''}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getSmallImageUrl(smallImage: string, appId?: string): string {
+  if (smallImage.startsWith('mp:external/')) {
+    const match = smallImage.match(/https\/(.*)/i);
+    if (match?.[1]) {
+      return `https://${match[1]}`;
+    }
+    return '';
+  }
+  
+  if (!smallImage.startsWith('http')) {
+    return `https://cdn.discordapp.com/app-assets/${appId}/${smallImage}.png`;
+  }
+  
+  return smallImage;
 }

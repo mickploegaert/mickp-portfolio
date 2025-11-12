@@ -71,7 +71,7 @@ export default function Hero() {
             className="text-[40px] leading-[1.1em] text-black"
             style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700, maxWidth: '820px' }}
           >
-            Hi, I'm a student software development. I'm 18 years old and I'm very interested in programming!
+            Hi, I'm a software development student. I'm 18 years old and I'm very interested in programming!
           </p>
         </div>
       </div>

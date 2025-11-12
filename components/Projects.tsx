@@ -9,32 +9,32 @@ export default function Projects() {
     {
       id: '1',
       title: 'E-Commerce Platform',
-      image: 'https://via.placeholder.com/600x600/cccccc/ffffff?text=E-Commerce',
+      image: 'https://picsum.photos/600/600?random=1',
       isLarge: true
     },
     {
       id: '2',
       title: 'Weather Dashboard',
-      image: 'https://via.placeholder.com/600x600/cccccc/ffffff?text=Weather',
+      image: 'https://picsum.photos/600/600?random=2',
       isLarge: true
     },
     {
       id: '3',
       title: 'Task Manager',
-      image: 'https://via.placeholder.com/600x600/cccccc/ffffff?text=Task+Manager',
+      image: 'https://picsum.photos/600/600?random=3',
       isLarge: false
     },
     {
       id: '4',
       title: 'Social Media Clone',
-      image: 'https://via.placeholder.com/600x600/cccccc/ffffff?text=Social',
+      image: 'https://picsum.photos/600/600?random=4',
       isLarge: false
     }
   ];
 
   return (
-    <section id="projects" className="min-h-screen bg-white py-20 px-10">
-      <div className="max-w-6xl mx-auto">
+    <section id="projects" className="min-h-screen bg-white py-20 px-4">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-16" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
           <h2 
@@ -64,9 +64,9 @@ export default function Projects() {
               alt={projects[0].title}
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className={`text-2xl font-bold text-white transition-all duration-300 ${
-                hoveredProject === '1' ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-70'
+            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
+              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
+                hoveredProject === '1' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`} style={{ fontFamily: 'Inter, sans-serif' }}>
                 {projects[0].title}
               </h3>
@@ -86,9 +86,9 @@ export default function Projects() {
               alt={projects[1].title}
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className={`text-2xl font-bold text-white transition-all duration-300 ${
-                hoveredProject === '2' ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-70'
+            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
+              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
+                hoveredProject === '2' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`} style={{ fontFamily: 'Inter, sans-serif' }}>
                 {projects[1].title}
               </h3>
@@ -109,9 +109,9 @@ export default function Projects() {
               alt={projects[2].title}
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className={`text-2xl font-bold text-white transition-all duration-300 ${
-                hoveredProject === '3' ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-70'
+            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
+              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
+                hoveredProject === '3' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`} style={{ fontFamily: 'Inter, sans-serif' }}>
                 {projects[2].title}
               </h3>
@@ -131,9 +131,9 @@ export default function Projects() {
               alt={projects[3].title}
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className={`text-2xl font-bold text-white transition-all duration-300 ${
-                hoveredProject === '4' ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-70'
+            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
+              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
+                hoveredProject === '4' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
               }`} style={{ fontFamily: 'Inter, sans-serif' }}>
                 {projects[3].title}
               </h3>
