@@ -1,92 +1,97 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from 'react';
+import HamburgerMenu from './HamburgerMenu';
 
 export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      setScrolled(isScrolled);
+
+      // Update active section based on scroll position
+      const sections = ['projects', 'about', 'contact'];
+      const current = sections.find(section => {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          return rect.top <= 100 && rect.bottom >= 100;
+        }
+        return false;
+      });
+      setActiveSection(current || '');
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navItems = [
+    { href: "#projects", label: "Projects" },
+    { href: "#about", label: "About" },
+    { href: "#contact", label: "Contact" },
+  ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-start justify-between px-6 py-4">
+    <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300 ${
+      scrolled 
+        ? 'bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-200' 
+        : 'bg-transparent'
+    }`}>
       {/* Logo */}
       <div 
-        className="text-[26px] text-black" 
+        className="text-[32px] text-black cursor-pointer hover:opacity-70 transition-opacity duration-200" 
         style={{ 
           fontFamily: 'Inter, sans-serif', 
           letterSpacing: '-0.06em', 
-          fontWeight: 500,
+          fontWeight: 700,
           animation: 'slideUpFade 0.8s ease-out 0.2s both'
         }}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        MIPL
+        MICKP
       </div>
 
-      {/* Hamburger button */}
-      <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        className="w-12 h-12 rounded-full bg-black/90 flex items-center justify-center hover:scale-105 transition-transform"
-        style={{ animation: 'slideUpFade 0.8s ease-out 0.4s both' }}
-        aria-label="Menu"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-        >
-          <line x1="4" y1="7" x2="16" y2="7" />
-          <line x1="4" y1="13" x2="16" y2="13" />
-        </svg>
-      </button>
+      {/* Desktop Navigation links */}
+      <div className="hidden md:flex gap-8" style={{ animation: 'slideUpFade 0.8s ease-out 0.4s both' }}>
+        {navItems.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className={`relative text-[20px] transition-all duration-200 hover:opacity-70 ${
+              activeSection === item.href.slice(1) 
+                ? 'text-black font-bold' 
+                : 'text-black/80 hover:text-black'
+            }`}
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              letterSpacing: '-0.05em',
+              fontWeight: 700,
+            }}
+          >
+            {item.label}
+            {activeSection === item.href.slice(1) && (
+              <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-black rounded-full" />
+            )}
+          </a>
+        ))}
+      </div>
 
-      {/* Menu items - slide from left on white background */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-white"
-            onClick={() => setMenuOpen(false)}
-          />
-          
-          {/* Menu items */}
-          <div className="relative z-50 flex flex-col gap-8">
-            {[
-              { href: "#projects", label: "Projects", delay: "0ms" },
-              { href: "#about", label: "About", delay: "80ms" },
-              { href: "#contact", label: "Contact", delay: "160ms" },
-            ].map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="text-[60px] text-black hover:opacity-60 transition-opacity"
-                style={{
-                  fontFamily: 'Inter, sans-serif',
-                  letterSpacing: '-0.06em',
-                  fontWeight: 400,
-                  animation: `slideFromLeft 0.4s ease-out ${item.delay} both`
-                }}
-                onClick={() => setMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Mobile menu button */}
+      <div className="md:hidden">
+        <HamburgerMenu 
+          navItems={navItems}
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(!mobileMenuOpen)}
+        />
+      </div>
 
       <style jsx>{`
-        @keyframes slideFromLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
         @keyframes slideUpFade {
           from {
             opacity: 0;

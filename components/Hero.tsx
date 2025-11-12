@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import DiscordProfile from "./DiscordProfile";
 
 export default function Hero() {
   const [copied, setCopied] = useState(false);
+
   return (
-    <div className="flex-1 grid grid-cols-[auto_380px] grid-rows-[auto_1fr_auto] gap-x-12">
+    <div className="flex-1 grid grid-cols-[auto_460px] grid-rows-[auto_1fr_auto] gap-x-12">
       {/* Left column: Name + Email */}
       <div className="col-start-1 row-start-1 row-end-4 flex flex-col justify-start pt-40">
         <h1
@@ -13,7 +15,7 @@ export default function Hero() {
           style={{ 
             letterSpacing: '-0.09em', 
             fontFamily: 'Inter, sans-serif', 
-            fontWeight: 500,
+            fontWeight: 700,
             animation: 'slideUpFade 0.8s ease-out 0.1s both'
           }}
         >
@@ -22,8 +24,8 @@ export default function Hero() {
         <div className="mt-32 flex items-center gap-3" style={{ animation: 'slideUpFade 0.8s ease-out 0.3s both' }}>
           <a
             href="mailto:243338@student.scalda.nl"
-            className="text-[26px] text-black hover:opacity-60 transition"
-            style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}
+            className="text-[26px] text-black hover:opacity-60 transition-opacity duration-200 font-bold"
+            style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
           >
             243338@student.scalda.nl
           </a>
@@ -33,7 +35,7 @@ export default function Hero() {
               setCopied(true);
               window.setTimeout(() => setCopied(false), 1200);
             }}
-            className="relative w-5 h-5 text-black hover:opacity-70 transition"
+            className="relative w-5 h-5 text-black hover:opacity-70 transition-opacity duration-200 ml-2"
             aria-label="Copy email"
           >
             <svg
@@ -48,28 +50,30 @@ export default function Hero() {
               <rect x="7" y="7" width="11" height="11" rx="1" />
               <path d="M 2 13 L 2 3 C 2 2.4 2.4 2 3 2 L 13 2" />
             </svg>
-            <span className={`absolute left-full ml-2 top-1/2 -translate-y-1/2 text-xs text-black/70 transition-opacity duration-300 whitespace-nowrap ${copied ? 'opacity-100' : 'opacity-0'}`}>
+            <span className={`absolute left-full ml-2 top-1/2 -translate-y-1/2 text-xs text-black/70 transition-opacity duration-300 whitespace-nowrap ${
+              copied ? 'opacity-100' : 'opacity-0'
+            }`}>
               Copied
             </span>
           </button>
         </div>
       </div>
 
-      {/* Right column middle: small profile image */}
+      {/* Right column middle: Discord profile */}
       <div className="col-start-2 row-start-2 flex justify-end items-start mt-20 pr-8" style={{ animation: 'slideUpFade 0.8s ease-out 0.5s both' }}>
-        <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-200">
-          <Image src="/profiel.jpg" alt="Profielfoto" width={160} height={160} className="object-cover w-full h-full" />
-        </div>
+        <DiscordProfile />
       </div>
 
       {/* Right column bottom: description text */}
       <div className="col-start-2 row-start-3 flex justify-start items-end pb-6" style={{ animation: 'slideUpFade 0.8s ease-out 0.7s both' }}>
-        <p
-          className="text-[40px] leading-[1.1em] text-black"
-          style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 500, maxWidth: '820px' }}
-        >
-          Hi I&apos;m a student software development I&apos;m 18 years old and I&apos;m very interested in programming
-        </p>
+        <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
+          <p
+            className="text-[40px] leading-[1.1em] text-black"
+            style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700, maxWidth: '820px' }}
+          >
+            Hi, I'm a student software development. I'm 18 years old and I'm very interested in programming!
+          </p>
+        </div>
       </div>
 
       <style jsx>{`

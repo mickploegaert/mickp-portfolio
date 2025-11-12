@@ -2,40 +2,43 @@
 
 import { useState, useRef, useEffect } from "react";
 
-export default function HamburgerMenu() {
-  const [open, setOpen] = useState(false);
+export default function HamburgerMenu({ navItems, isOpen, onClose }: {
+  navItems: Array<{ href: string; label: string }>;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [onClose]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (!panelRef.current) return;
-      if (open && !panelRef.current.contains(e.target as Node)) {
-        setOpen(false);
+      if (isOpen && !panelRef.current.contains(e.target as Node)) {
+        onClose();
       }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
+  }, [isOpen, onClose]);
 
   return (
     <div className="relative" ref={panelRef}>
       {/* Fancy trigger button */}
       <button
-        aria-label={open ? "Close menu" : "Open menu"}
-        onClick={() => setOpen((v) => !v)}
-        className={`group relative grid place-items-center w-12 h-12 rounded-full bg-black/90 text-white shadow-lg shadow-black/10 transition-transform duration-300 ease-out ${open ? "rotate-45" : "hover:scale-105"}`}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        onClick={() => onClose()}
+        className={`group relative grid place-items-center w-12 h-12 rounded-full bg-black text-white shadow-lg transition-transform duration-300 ease-out ${isOpen ? "rotate-45" : "hover:scale-105"}`}
       >
         {/* Closed state: 2 horizontal lines */}
         <svg
-          className={`absolute transition-all duration-300 ${open ? "opacity-0 scale-50" : "opacity-100 scale-100"}`}
+          className={`absolute transition-all duration-300 ${isOpen ? "opacity-0 scale-50" : "opacity-100 scale-100"}`}
           width="20"
           height="20"
           viewBox="0 0 20 20"
@@ -46,12 +49,12 @@ export default function HamburgerMenu() {
           aria-hidden
         >
           <line x1="4" y1="7" x2="16" y2="7" />
-          <line x1="4" y1="13" x2="16" y2="13" />
+                   <line x1="4" y1="13" x2="16" y2="13" />
         </svg>
 
         {/* Open state: X icon */}
         <svg
-          className={`absolute transition-all duration-300 ${open ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}
+          className={`absolute transition-all duration-300 ${isOpen ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}
           width="20"
           height="20"
           viewBox="0 0 20 20"
@@ -68,31 +71,28 @@ export default function HamburgerMenu() {
       {/* Dropdown panel: slides out to the left */}
       <div className="absolute right-0 top-full mt-3 overflow-visible pointer-events-none">
         <div
-          className={`origin-top-right rounded-xl bg-white shadow-2xl overflow-hidden transition-all duration-300 ease-out pointer-events-auto ${open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
+          className={`origin-top-right rounded-xl bg-white shadow-2xl overflow-hidden transition-all duration-300 ease-out pointer-events-auto ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
           style={{ 
             border: '1px solid rgba(0,0,0,0.08)',
-            pointerEvents: open ? 'auto' : 'none'
+            pointerEvents: isOpen ? 'auto' : 'none'
           }}
         >
           <nav className="flex flex-col py-2 px-1 text-black">
-            {[
-              { href: "#projects", label: "Projects" },
-              { href: "#about", label: "About" },
-              { href: "#contact", label: "Contact" },
-            ].map((item, idx) => (
+            {navItems.map((item, idx) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="rounded-lg px-6 py-3.5 text-[18px] font-medium hover:bg-black/5 active:bg-black/10 transition-all duration-200"
+                className="rounded-lg px-6 py-3.5 text-[18px] font-bold hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
                 style={{
                   letterSpacing: '-0.06em',
                   fontFamily: 'Inter, sans-serif',
-                  transitionDelay: open ? `${(idx + 1) * 80}ms` : '0ms',
-                  opacity: open ? 1 : 0,
-                  transform: open ? 'translateX(0)' : 'translateX(16px)',
+                  fontWeight: 700,
+                  transitionDelay: isOpen ? `${(idx + 1) * 80}ms` : '0ms',
+                  opacity: isOpen ? 1 : 0,
+                  transform: isOpen ? 'translateX(0)' : 'translateX(16px)',
                   transitionProperty: 'opacity, transform, background-color'
                 }}
-                onClick={() => setOpen(false)}
+                onClick={() => onClose()}
               >
                 {item.label}
               </a>
