@@ -136,6 +136,8 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
     let lastValidData: DiscordData | null = null;
     let socket: WebSocket | null = null;
     let heartbeatInterval: NodeJS.Timeout | null = null;
+    let retryCount = 0;
+    const maxRetries = 3;
 
     // Helper functions
     const formatElapsedTime = (startTimestamp: number): string => {
@@ -237,36 +239,45 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
       console.warn('Failed to load cached Discord presence data:', e);
     }
 
-    // Initialize WebSocket connection
-    socket = new WebSocket('wss://api.lanyard.rest/socket');
-    
-    const dataTimeout = setTimeout(() => {
-      if (!hasReceivedData) {
-        if (lastValidData) {
-          updatePresenceUI(lastValidData);
-        } else {
-          showErrorState("Timeout waiting for Discord data");
-        }
+    const connectWebSocket = () => {
+      if (retryCount >= maxRetries) {
+        showErrorState("Max retries reached. Please check if your Discord ID is correct and privacy settings allow data sharing.");
+        return;
       }
-    }, 10000);
 
-    socket.addEventListener('open', () => {
-      socket?.send(JSON.stringify({
-        op: 2,
-        d: { subscribe_to_ids: [userId] },
-      }));
+      retryCount++;
+      console.log(`Connecting to Lanyard API (attempt ${retryCount}/${maxRetries})`);
 
-      heartbeatInterval = setInterval(() => {
-        socket?.send(JSON.stringify({ op: 3 }));
-      }, 30000);
-    });
+      // Initialize WebSocket connection
+      socket = new WebSocket('wss://api.lanyard.rest/socket');
+      
+      const dataTimeout = setTimeout(() => {
+        if (!hasReceivedData) {
+          if (lastValidData) {
+            updatePresenceUI(lastValidData);
+          } else {
+            // Try REST API as fallback
+            fetchInitialData();
+          }
+        }
+      }, 8000); // Reduced timeout
 
-    socket.addEventListener('message', (event) => {
-      const message: PresenceData = JSON.parse(event.data);
+      socket.addEventListener('open', () => {
+        console.log('WebSocket connected');
+        socket?.send(JSON.stringify({
+          op: 2,
+          d: { subscribe_to_ids: [userId] },
+        }));
 
-      if (message.t === 'INIT_STATE' || message.t === 'PRESENCE_UPDATE') {
-        setTimeout(() => {
-          hasReceivedData = true;
+        heartbeatInterval = setInterval(() => {
+          socket?.send(JSON.stringify({ op: 3 }));
+        }, 30000);
+      });
+
+      socket.addEventListener('message', (event) => {
+        const message: PresenceData = JSON.parse(event.data);
+
+        if (message.t === 'INIT_STATE' || message.t === 'PRESENCE_UPDATE') {
           clearTimeout(dataTimeout);
           
           if (message.d && (message.d as { [key: string]: DiscordData })[userId]) {
@@ -276,16 +287,36 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
           } else if (lastValidData) {
             updatePresenceUI(lastValidData);
           }
-        }, 50);
-      }
-    });
+        }
+      });
 
-    // Fetch initial data from REST API
+      socket.addEventListener('error', (error) => {
+        console.error('WebSocket error:', error);
+        clearTimeout(dataTimeout);
+        if (lastValidData) {
+          console.warn("WebSocket error, but using cached data");
+          updatePresenceUI(lastValidData);
+        } else if (retryCount < maxRetries) {
+          setTimeout(connectWebSocket, 2000 * retryCount); // Exponential backoff
+        } else {
+          showErrorState("WebSocket connection failed. Please check your Discord privacy settings.");
+        }
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+      });
+
+      socket.addEventListener('close', () => {
+        console.log('WebSocket closed');
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        if (!hasReceivedData && retryCount < maxRetries) {
+          setTimeout(connectWebSocket, 2000 * retryCount);
+        }
+      });
+    };
+
+    // Fetch initial data from REST API as fallback
     const fetchInitialData = async () => {
       try {
-        if (lastValidData) {
-          updatePresenceUI(lastValidData);
-        }
+        console.log('Fetching initial data from REST API');
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -305,41 +336,29 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
         }
         
         const result = await response.json();
+        console.log('REST API response:', result);
         
         if (result.success) {
           hasReceivedData = true;
-          clearTimeout(dataTimeout);
           updatePresenceUI(result.data);
+        } else {
+          throw new Error('API returned success: false');
         }
       } catch (error) {
         console.error('Error fetching initial data:', error);
-        if (lastValidData) {
-          updatePresenceUI(lastValidData);
+        if (retryCount >= maxRetries) {
+          showErrorState(`Failed to fetch Discord data: ${error instanceof Error ? error.message : 'Unknown error'}. Make sure your Discord ID (${userId}) is correct and your Discord privacy settings allow data sharing.`);
         }
       }
     };
     
-    fetchInitialData();
-
-    socket.addEventListener('error', () => {
-      if (lastValidData) {
-        console.warn("WebSocket error, but using cached data");
-        updatePresenceUI(lastValidData);
-      } else {
-        showErrorState("WebSocket connection error");
-      }
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
-    });
-
-    socket.addEventListener('close', () => {
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
-    });
+    // Start connection
+    connectWebSocket();
 
     // Cleanup
     return () => {
-      clearTimeout(dataTimeout);
-      if (socket) socket.close();
       if (heartbeatInterval) clearInterval(heartbeatInterval);
+      if (socket) socket.close();
     };
   }, [userId]);
 
@@ -352,21 +371,22 @@ export default function DiscordProfile({ userId = '719831189585657877' }: { user
           <div className="p-6 border-b border-gray-200 pb-8">
             <div className="flex items-center">
               <div className="w-28 h-28 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold text-4xl mr-6 border-4 border-white -mt-16 shadow-lg overflow-hidden">
-                <div className="animate-pulse w-full h-full bg-gray-300"></div>
+                <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                  <span className="text-gray-600">M</span>
+                </div>
               </div>
               <div className="mt-2">
-                <div className="h-8 w-44 bg-gray-300 rounded animate-pulse mb-2"></div>
-                <div className="h-6 w-36 bg-gray-300 rounded animate-pulse"></div>
+                <div className="text-3xl font-extrabold text-black">MickP</div>
+                <div className="text-lg text-gray-500 font-medium">Coding in VSCode</div>
               </div>
             </div>
           </div>
         </div>
-        <div className="p-6 text-center text-gray-500 flex items-center justify-center">
-          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          Loading Discord presence...
+        <div className="p-6 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-lg font-medium text-gray-700">Currently working on projects</span>
+          </div>
         </div>
       </div>
     );
