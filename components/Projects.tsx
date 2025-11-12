@@ -36,9 +36,9 @@ export default function Projects() {
     <section id="projects" className="min-h-screen bg-white py-20 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-16" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
+        <div className="mb-12" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
           <h2 
-            className="text-6xl md:text-8xl font-black text-black mb-4"
+            className="text-6xl md:text-8xl font-black text-black"
             style={{ 
               fontFamily: 'Inter, sans-serif', 
               letterSpacing: '-0.08em' 

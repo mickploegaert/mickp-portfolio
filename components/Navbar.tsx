@@ -38,15 +38,14 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-lg border-b border-gray-200">
+    <nav className="sticky top-0 left-0 right-0 z-10 flex items-start justify-between px-6 pt-2 pb-1">
       {/* Logo */}
       <div 
-        className="text-[32px] text-black cursor-pointer hover:opacity-70 transition-opacity duration-200" 
+        className="text-[32px] text-black hover:opacity-70 transition-opacity duration-200 cursor-pointer" 
         style={{ 
           fontFamily: 'Inter, sans-serif', 
           letterSpacing: '-0.06em', 
-          fontWeight: 700,
-          animation: 'slideUpFade 0.8s ease-out 0.2s both'
+          fontWeight: 700
         }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
@@ -54,15 +53,15 @@ export default function Navbar() {
       </div>
 
       {/* Desktop Navigation links */}
-      <div className="hidden md:flex gap-8" style={{ animation: 'slideUpFade 0.8s ease-out 0.4s both' }}>
+      <div className="hidden md:flex gap-8">
         {navItems.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="relative text-[20px] text-black transition-all duration-200 hover:opacity-70"
+            className="relative text-[32px] text-black hover:opacity-70 transition-all duration-200"
             style={{
               fontFamily: 'Inter, sans-serif',
-              letterSpacing: '-0.05em',
+              letterSpacing: '-0.06em',
               fontWeight: 700,
             }}
           >

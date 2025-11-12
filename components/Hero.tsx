@@ -9,7 +9,7 @@ export default function Hero() {
   return (
     <div className="flex-1 grid grid-cols-[auto_460px] grid-rows-[auto_1fr_auto] gap-x-12">
       {/* Left column: Name + Email */}
-      <div className="col-start-1 row-start-1 row-end-4 flex flex-col justify-start pt-40">
+      <div className="col-start-1 row-start-1 row-end-4 flex flex-col justify-start pt-20 pl-8">
         <h1
           className="text-[70px] md:text-[120px] lg:text-[150px] xl:text-[174px] leading-[1em] text-black"
           style={{ 
@@ -65,15 +65,7 @@ export default function Hero() {
       </div>
 
       {/* Right column bottom: description text */}
-      <div className="col-start-2 row-start-3 flex justify-start items-end pb-6" style={{ animation: 'slideUpFade 0.8s ease-out 0.7s both' }}>
-        <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-          <p
-            className="text-[40px] leading-[1.1em] text-black"
-            style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700, maxWidth: '820px' }}
-          >
-            Hi, I'm a software development student. I'm 18 years old and I'm very interested in programming!
-          </p>
-        </div>
+      <div className="col-start-2 row-start-3 hidden lg:block" style={{ animation: 'slideUpFade 0.8s ease-out 0.7s both' }}>
       </div>
 
       <style jsx>{`

@@ -61,7 +61,6 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
   const socketRef = useRef<WebSocket | null>(null);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const dataTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const intervalsRef = useRef<NodeJS.Timeout[]>([]);
 
   const formatElapsedTime = (startTimestamp: number) => {
     const now = Date.now();
@@ -138,31 +137,11 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
       if (dataTimeoutRef.current) {
         clearTimeout(dataTimeoutRef.current);
       }
-      intervalsRef.current.forEach(interval => clearInterval(interval));
-      intervalsRef.current = [];
     };
 
     const initializeConnection = () => {
       setLoading(true);
 
-      // Try cached data first
-      const cachedData = typeof window !== 'undefined' ? localStorage?.getItem('discord_presence_data') : null;
-      if (cachedData) {
-        try {
-          const parsed = JSON.parse(cachedData);
-          const oneHourAgo = Date.now() - 60 * 60 * 1000;
-          if (parsed.timestamp > oneHourAgo && parsed.data) {
-            if (isMounted) {
-              setPresenceData(parsed.data);
-              setLoading(false);
-            }
-          }
-        } catch (e) {
-          console.warn('Failed to load cached data:', e);
-        }
-      }
-
-      // Set timeout for data
       const timeout = setTimeout(() => {
         if (isMounted && !presenceData) {
           setError('Timeout waiting for Discord data');
@@ -171,7 +150,6 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
       }, 10000);
       dataTimeoutRef.current = timeout;
 
-      // Fetch initial data
       fetch(`https://api.lanyard.rest/v1/users/${userId}`, {
         mode: 'cors',
         headers: { 'Accept': 'application/json' },
@@ -183,12 +161,6 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
             setError(null);
             setLoading(false);
             if (dataTimeoutRef.current) clearTimeout(dataTimeoutRef.current);
-            if (typeof window !== 'undefined') {
-              localStorage?.setItem('discord_presence_data', JSON.stringify({
-                timestamp: Date.now(),
-                data: data.data,
-              }));
-            }
           }
         })
         .catch(err => {
@@ -199,7 +171,6 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
           }
         });
 
-      // WebSocket connection
       socketRef.current = new WebSocket('wss://api.lanyard.rest/socket');
 
       socketRef.current.addEventListener('open', () => {
@@ -280,12 +251,11 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
   const avatarUrl = getUserAvatar(presenceData);
   const statusInfo = getStatusInfo(presenceData.discord_status);
 
-  // Separate Spotify from other activities
   const spotifyActivity = presenceData.listening_to_spotify && presenceData.spotify;
   const otherActivities = presenceData.activities?.filter(a => a.name !== 'Spotify') || [];
 
   return (
-    <div className="bg-white rounded-xl w-96 shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
+    <div className="bg-white rounded-xl w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
       <style>{`
         .spotify-eq-bg .eq-bar {
           width: 18%;
@@ -464,8 +434,7 @@ function ActivityItem({ activity, index, formatElapsedTime, getActivityIcon }: {
 
   const activityType = activityTypeMap[activity.type] || 'Using';
 
-  // Check if it's a coding activity
-  const codeNames = ['Visual Studio Code', 'VS Code', 'WebStorm', 'Code', 'Cursor', 'IntelliJ IDEA', 'PhpStorm', 'PyCharm', 'Rider', 'Vim'];
+  const codeNames = ['Visual Studio Code', 'VS Code', 'Visual Studio', 'WebStorm', 'Code', 'Cursor', 'IntelliJ IDEA', 'PhpStorm', 'PyCharm', 'Rider', 'Vim', 'Sublime Text', 'Atom', 'Notepad++'];
   const isCoding = codeNames.some(name => 
     activity.name?.toLowerCase().includes(name.toLowerCase()) ||
     activity.details?.toLowerCase().includes(name.toLowerCase()) ||
