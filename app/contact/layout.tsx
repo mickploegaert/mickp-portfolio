@@ -8,6 +8,7 @@ export default function ContactLayout({
 }) {
   return (
     <div className="min-h-screen bg-[#f5f5f5] relative font-sans">
+      <Navbar />
       {children}
       <Footer />
     </div>
