@@ -2,12 +2,12 @@
 
 export default function About() {
   return (
-    <section id="about" className="min-h-screen bg-white py-20 px-4">
+    <section id="about" className="min-h-screen bg-white py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-12" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
+        <div className="mb-8 sm:mb-12" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
           <h2 
-            className="text-6xl md:text-8xl font-black text-black"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-black"
             style={{ 
               fontFamily: 'Inter, sans-serif', 
               letterSpacing: '-0.08em' 
@@ -35,7 +35,7 @@ export default function About() {
           {/* Top Left Text */}
           <div className="lg:col-span-5 lg:col-start-1 lg:row-start-1 lg:pr-4" style={{ animation: 'slideUpFade 0.8s ease-out 0.3s both' }}>
             <p
-              className="text-[36px] leading-[1em] text-black"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-[36px] leading-[1em] text-black"
               style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
             >
               I'm an 18-year-old Software Development student at Scalda in Terneuzen. I'm passionate about learning, creating, and improving my coding skills every day.
@@ -43,7 +43,7 @@ export default function About() {
           </div>
 
           {/* Bottom Left Image (square) */}
-          <div className="lg:col-span-5 lg:col-start-1 lg:row-start-2 -mt-20" style={{ animation: 'slideUpFade 0.8s ease-out 0.5s both' }}>
+          <div className="lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:-mt-20 md:-mt-16 sm:-mt-12" style={{ animation: 'slideUpFade 0.8s ease-out 0.5s both' }}>
             <div className="relative overflow-hidden shadow-lg">
               <div className="aspect-square w-full h-auto">
                 <img
@@ -58,7 +58,7 @@ export default function About() {
           {/* Bottom Text */}
           <div className="lg:col-span-6 lg:col-start-7 lg:row-start-2 lg:pl-4" style={{ animation: 'slideUpFade 0.8s ease-out 0.4s both' }}>
             <p
-              className="text-[36px] leading-[1em] text-black"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-[36px] leading-[1em] text-black"
               style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
             >
               In my free time, I enjoy playing football, gaming, and running. Staying active helps me stay focused, motivated, and balanced in life.

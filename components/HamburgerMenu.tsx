@@ -7,6 +7,23 @@ export default function HamburgerMenu({ navItems, isOpen, onClose }: {
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const handleNavClick = (href: string) => {
+    if (href.startsWith('/#')) {
+      const elementId = href.replace('/#', '');
+      const element = document.getElementById(elementId);
+      if (element) {
+        const offset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+    onClose();
+  };
   return (
     <div className="relative">
       <button
@@ -67,7 +84,7 @@ export default function HamburgerMenu({ navItems, isOpen, onClose }: {
                   transform: isOpen ? 'translateX(0)' : 'translateX(16px)',
                   transitionProperty: 'opacity, transform, background-color'
                 }}
-                onClick={() => onClose()}
+                onClick={() => handleNavClick(item.href)}
               >
                 {item.label}
               </a>

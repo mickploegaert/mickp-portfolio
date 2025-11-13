@@ -5,7 +5,7 @@ export default function Footer() {
     <div className="relative bg-black text-white min-h-screen">
       <div className="relative h-screen w-full">
         {/* Social Icons */}
-        <div className="absolute top-4 sm:top-6 lg:top-8 lg:top-12 right-4 sm:right-6 lg:right-8 lg:right-12 flex gap-3 sm:gap-4 z-20">
+        <div className="absolute top-4 sm:top-6 md:top-8 lg:top-12 right-4 sm:right-6 md:right-8 lg:right-12 flex gap-3 sm:gap-4 z-20">
           <a 
             href="https://instagram.com" 
             target="_blank" 
@@ -39,11 +39,11 @@ export default function Footer() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-16 p-6 sm:p-8 lg:p-12 lg:p-20 min-h-screen items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-16 p-4 sm:p-6 md:p-8 lg:p-12 lg:p-20 min-h-screen items-center">
           {/* Left Text */}
           <div className="lg:col-span-7 lg:col-start-1">
             <h3 
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-[48px] lg:text-[64px] font-black mb-4 sm:mb-6 lg:mb-8 text-white"
+              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] 2xl:text-[64px] font-black mb-4 sm:mb-6 lg:mb-8 text-white"
               style={{ 
                 fontFamily: 'Inter, sans-serif', 
                 letterSpacing: '-0.06em',
@@ -53,7 +53,7 @@ export default function Footer() {
               Curious about what we can create together?
             </h3>
             <p 
-              className="text-xl sm:text-2xl md:text-3xl lg:text-4xl lg:text-[32px] lg:text-[40px] mb-6 sm:mb-8 text-white"
+              className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[32px] 2xl:text-[40px] mb-6 sm:mb-8 text-white"
               style={{ 
                 fontFamily: 'Inter, sans-serif', 
                 letterSpacing: '-0.06em',
@@ -79,13 +79,13 @@ export default function Footer() {
         </div>
 
         {/* Bottom Left Contact Info */}
-        <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 lg:bottom-12 left-4 sm:left-6 lg:left-8 lg:left-12 space-y-3 sm:space-y-4">
+        <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 left-4 sm:left-6 md:left-8 lg:left-12 space-y-3 sm:space-y-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
             </svg>
             <span 
-              className="text-base sm:text-lg lg:text-[24px] text-white break-all"
+              className="text-sm sm:text-base md:text-lg lg:text-[24px] text-white break-all"
               style={{ 
                 fontFamily: 'Inter, sans-serif', 
                 letterSpacing: '-0.04em',
@@ -100,22 +100,22 @@ export default function Footer() {
               <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
             </svg>
             <span 
-              className="text-base sm:text-lg lg:text-[24px] text-white"
+              className="text-sm sm:text-base md:text-lg lg:text-[24px] text-white"
               style={{ 
                 fontFamily: 'Inter, sans-serif', 
                 letterSpacing: '-0.04em',
                 fontWeight: 500 
               }}
             >
-              +32 6 12 50 02 51
+              +31 6 12 50 02 51
             </span>
           </div>
         </div>
 
         {/* Bottom Right Copyright */}
-        <div className="absolute bottom-4 sm:bottom-6 lg:bottom-8 lg:bottom-12 right-4 sm:right-6 lg:right-8 lg:right-12">
+        <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 right-4 sm:right-6 md:right-8 lg:right-12">
           <p 
-            className="text-xs sm:text-sm lg:text-[18px] text-white/60 hover:text-white/80 transition-colors duration-300"
+            className="text-xs sm:text-sm md:text-base lg:text-[18px] text-white/60 hover:text-white/80 transition-colors duration-300"
             style={{ 
               fontFamily: 'Inter, sans-serif', 
               letterSpacing: '-0.02em',

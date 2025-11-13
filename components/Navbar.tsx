@@ -24,9 +24,27 @@ export default function Navbar() {
     { href: "/contact", label: "Contact" },
   ];
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/#')) {
+      e.preventDefault();
+      const elementId = href.replace('/#', '');
+      const element = document.getElementById(elementId);
+      if (element) {
+        const offset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
   return (
     <nav className={`sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 md:px-6 pt-2 pb-1 transition-all duration-200 ${
-      pathname === '/contact' 
+      pathname === '/contact' || pathname.startsWith('/contact') 
         ? 'bg-white/90 backdrop-blur-sm'
         : scrolled ? 'bg-white/90 backdrop-blur-sm shadow-sm' : 'bg-transparent'
     }`}>
@@ -49,6 +67,7 @@ export default function Navbar() {
           <a
             key={item.href}
             href={item.href}
+            onClick={(e) => handleNavClick(e, item.href)}
             className="relative text-base sm:text-lg md:text-xl lg:text-[32px] text-black hover:opacity-70 transition-all duration-200"
             style={{
               fontFamily: 'Inter, sans-serif',

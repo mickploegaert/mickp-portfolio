@@ -212,7 +212,7 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl w-96 shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300">
+      <div className="bg-white rounded-xl w-full max-w-[380px] sm:max-w-[420px] md:max-w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300">
         <div className="h-24 bg-gray-200" />
         <div className="p-6 border-b border-gray-300">
           <div className="flex items-center">
@@ -236,7 +236,7 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
 
   if (error || !presenceData) {
     return (
-      <div className="bg-white rounded-xl w-96 shadow-xl overflow-hidden text-black flex-shrink-0">
+      <div className="bg-white rounded-xl w-full max-w-[380px] sm:max-w-[420px] md:max-w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0">
         <div className="p-6 text-center">
           <div className="text-lg font-semibold text-red-600 mb-2">Connection Error</div>
           <p className="text-sm text-gray-600">{error || 'Could not load Discord presence'}</p>
@@ -255,7 +255,7 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
   const allActivities = presenceData.activities || [];
 
   return (
-    <div className="bg-white rounded-xl w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
+    <div className="bg-white rounded-xl w-full max-w-[380px] sm:max-w-[420px] md:max-w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
       <style>{`
         .spotify-eq-bg .eq-bar {
           width: 18%;
@@ -354,9 +354,11 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
       )}
 
       {allActivities.length > 0 ? (
-        allActivities.map((activity, idx) => (
-          <ActivityItem key={idx} activity={activity} formatElapsedTime={formatElapsedTime} getActivityIcon={getActivityIcon} />
-        ))
+        allActivities
+          .filter(activity => activity.name !== 'Spotify')
+          .map((activity, idx) => (
+            <ActivityItem key={idx} activity={activity} formatElapsedTime={formatElapsedTime} getActivityIcon={getActivityIcon} />
+          ))
       ) : !spotifyActivity ? (
         <div className="p-4 text-center text-gray-600">No activities right now</div>
       ) : null}
