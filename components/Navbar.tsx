@@ -7,7 +7,8 @@ import HamburgerMenu from './HamburgerMenu';
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = rawPathname ?? ''; // default to empty string if null
 
   useEffect(() => {
     const handleScroll = () => {
