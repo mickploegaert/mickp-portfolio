@@ -34,11 +34,11 @@ export default function Navbar() {
   const navItems = [
     { href: "#projects", label: "Projects" },
     { href: "#about", label: "About" },
-    { href: "#contact", label: "Contact" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
-    <nav className="sticky top-0 left-0 right-0 z-10 flex items-start justify-between px-6 pt-2 pb-1">
+    <nav className="sticky top-0 left-0 right-0 z-10 flex items-start justify-between px-6 pt-2 pb-1 bg-transparent">
       {/* Logo */}
       <div 
         className="text-[32px] text-black hover:opacity-70 transition-opacity duration-200 cursor-pointer" 
