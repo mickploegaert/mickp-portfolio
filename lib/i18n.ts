@@ -59,7 +59,7 @@ const translations = {
 const LanguageContext = {
   currentLanguage: 'nl' as Language,
   setLanguage: (lang: Language) => { LanguageContext.currentLanguage = lang; },
-  t: (key: string) => translations[LanguageContext.currentLanguage][key] || key
+  t: (key: string) => translations[LanguageContext.currentLanguage]?.[key] || key
 };
 
 export function TranslationProvider({ children }: { children: ReactNode }) {
