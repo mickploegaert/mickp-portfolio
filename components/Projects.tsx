@@ -1,37 +1,6 @@
 "use client";
 
-import { useState } from 'react';
-
 export default function Projects() {
-  const [hoveredProject, setHoveredProject] = useState<string | null>(null);
-
-  const projects = [
-    {
-      id: '1',
-      title: 'E-Commerce Platform',
-      image: 'https://picsum.photos/600/600?random=1',
-      isLarge: true
-    },
-    {
-      id: '2',
-      title: 'Weather Dashboard',
-      image: 'https://picsum.photos/600/600?random=2',
-      isLarge: true
-    },
-    {
-      id: '3',
-      title: 'Task Manager',
-      image: 'https://picsum.photos/600/600?random=3',
-      isLarge: false
-    },
-    {
-      id: '4',
-      title: 'Social Media Clone',
-      image: 'https://picsum.photos/600/600?random=4',
-      isLarge: false
-    }
-  ];
-
   return (
     <section id="projects" className="min-h-screen bg-white py-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -56,19 +25,15 @@ export default function Projects() {
                  animation: 'slideUpFade 0.8s ease-out 0.2s both',
                  aspectRatio: '1/1'
                }}
-               onMouseEnter={() => setHoveredProject('1')}
-               onMouseLeave={() => setHoveredProject(null)}
-               onClick={() => window.open('https://github.com', '_blank')}>
+               onClick={() => window.open('https://stirring-maamoul-29f058.netlify.app', '_blank')}>
             <img
-              src={projects[0].image}
-              alt={projects[0].title}
+              src="/healtadvisor.jpeg"
+              alt="Health Advisor App"
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
             <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
-                hoveredProject === '1' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-              }`} style={{ fontFamily: 'Inter, sans-serif' }}>
-                {projects[0].title}
+              <h3 className="text-3xl lg:text-4xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Health Advisor App
               </h3>
             </div>
           </div>
@@ -78,19 +43,15 @@ export default function Projects() {
                  animation: 'slideUpFade 0.8s ease-out 0.3s both',
                  aspectRatio: '1/1'
                }}
-               onMouseEnter={() => setHoveredProject('2')}
-               onMouseLeave={() => setHoveredProject(null)}
                onClick={() => window.open('https://github.com', '_blank')}>
             <img
-              src={projects[1].image}
-              alt={projects[1].title}
+              src="https://picsum.photos/600/600?random=2"
+              alt="Weather Dashboard"
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
             <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
-                hoveredProject === '2' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-              }`} style={{ fontFamily: 'Inter, sans-serif' }}>
-                {projects[1].title}
+              <h3 className="text-3xl lg:text-4xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Weather Dashboard
               </h3>
             </div>
           </div>
@@ -101,19 +62,15 @@ export default function Projects() {
                  animation: 'slideUpFade 0.8s ease-out 0.4s both',
                  aspectRatio: '1/1'
                }}
-               onMouseEnter={() => setHoveredProject('3')}
-               onMouseLeave={() => setHoveredProject(null)}
                onClick={() => window.open('https://github.com', '_blank')}>
             <img
-              src={projects[2].image}
-              alt={projects[2].title}
+              src="https://picsum.photos/600/600?random=3"
+              alt="Task Manager"
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
             <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
-                hoveredProject === '3' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-              }`} style={{ fontFamily: 'Inter, sans-serif' }}>
-                {projects[2].title}
+              <h3 className="text-3xl lg:text-4xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Task Manager
               </h3>
             </div>
           </div>
@@ -123,19 +80,15 @@ export default function Projects() {
                  animation: 'slideUpFade 0.8s ease-out 0.5s both',
                  aspectRatio: '1/1'
                }}
-               onMouseEnter={() => setHoveredProject('4')}
-               onMouseLeave={() => setHoveredProject(null)}
                onClick={() => window.open('https://github.com', '_blank')}>
             <img
-              src={projects[3].image}
-              alt={projects[3].title}
+              src="https://picsum.photos/600/600?random=4"
+              alt="Social Media Clone"
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
             <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className={`text-3xl lg:text-4xl font-bold text-white transition-all duration-700 transform ${
-                hoveredProject === '4' ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-              }`} style={{ fontFamily: 'Inter, sans-serif' }}>
-                {projects[3].title}
+              <h3 className="text-3xl lg:text-4xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
+                Social Media Clone
               </h3>
             </div>
           </div>

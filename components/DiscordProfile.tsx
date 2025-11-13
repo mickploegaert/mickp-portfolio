@@ -252,7 +252,7 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
   const statusInfo = getStatusInfo(presenceData.discord_status);
 
   const spotifyActivity = presenceData.listening_to_spotify && presenceData.spotify;
-  const otherActivities = presenceData.activities?.filter(a => a.name !== 'Spotify') || [];
+  const allActivities = presenceData.activities || [];
 
   return (
     <div className="bg-white rounded-xl w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
@@ -282,6 +282,44 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
           40% { height: calc(var(--eq-base, 60%) + 30%); }
           60% { height: calc(var(--eq-base, 60%) + 50%); }
           80% { height: calc(var(--eq-base, 60%) + 20%); }
+        }
+        
+        .code-tags-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          overflow: hidden;
+          opacity: 0.06;
+          pointer-events: none;
+        }
+        
+        .code-tag {
+          position: absolute;
+          font-family: 'Courier New', monospace;
+          font-size: 24px;
+          color: #6b7280;
+          animation: float-tag 20s linear infinite;
+        }
+        
+        .code-tag:nth-child(1) { left: 10%; top: 20%; animation-duration: 25s; animation-delay: 0s; }
+        .code-tag:nth-child(2) { left: 70%; top: 40%; animation-duration: 30s; animation-delay: -5s; }
+        .code-tag:nth-child(3) { left: 40%; top: 60%; animation-duration: 28s; animation-delay: -10s; }
+        .code-tag:nth-child(4) { left: 80%; top: 15%; animation-duration: 22s; animation-delay: -15s; }
+        .code-tag:nth-child(5) { left: 20%; top: 70%; animation-duration: 26s; animation-delay: -8s; }
+        
+        @keyframes float-tag {
+          0% { 
+            transform: translateY(0) rotate(0deg);
+            opacity: 0;
+          }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { 
+            transform: translateY(-100px) rotate(15deg);
+            opacity: 0;
+          }
         }
       `}</style>
 
@@ -315,9 +353,9 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
         <SpotifyActivity spotify={presenceData.spotify!} formatSongTime={formatSongTime} />
       )}
 
-      {otherActivities.length > 0 ? (
-        otherActivities.map((activity, idx) => (
-          <ActivityItem key={idx} activity={activity} index={idx} formatElapsedTime={formatElapsedTime} getActivityIcon={getActivityIcon} />
+      {allActivities.length > 0 ? (
+        allActivities.map((activity, idx) => (
+          <ActivityItem key={idx} activity={activity} formatElapsedTime={formatElapsedTime} getActivityIcon={getActivityIcon} />
         ))
       ) : !spotifyActivity ? (
         <div className="p-4 text-center text-gray-600">No activities right now</div>
@@ -403,9 +441,8 @@ function SpotifyActivity({ spotify, formatSongTime }: {
   );
 }
 
-function ActivityItem({ activity, index, formatElapsedTime, getActivityIcon }: {
+function ActivityItem({ activity, formatElapsedTime, getActivityIcon }: {
   activity: Activity;
-  index: number;
   formatElapsedTime: (ts: number) => string;
   getActivityIcon: (activity: Activity) => string | null;
 }) {
@@ -413,13 +450,15 @@ function ActivityItem({ activity, index, formatElapsedTime, getActivityIcon }: {
 
   useEffect(() => {
     if (activity.timestamps?.start) {
-      setElapsed(formatElapsedTime(activity.timestamps.start));
-      const interval = setInterval(() => {
+      const updateElapsed = () => {
         setElapsed(formatElapsedTime(activity.timestamps!.start!));
-      }, 1000);
+      };
+      
+      updateElapsed();
+      const interval = setInterval(updateElapsed, 1000);
       return () => clearInterval(interval);
     }
-  }, [activity, formatElapsedTime]);
+  }, [activity.timestamps?.start, formatElapsedTime]);
 
   const activityIcon = getActivityIcon(activity);
   
@@ -434,86 +473,111 @@ function ActivityItem({ activity, index, formatElapsedTime, getActivityIcon }: {
 
   const activityType = activityTypeMap[activity.type] || 'Using';
 
-  const codeNames = ['Visual Studio Code', 'VS Code', 'Visual Studio', 'WebStorm', 'Code', 'Cursor', 'IntelliJ IDEA', 'PhpStorm', 'PyCharm', 'Rider', 'Vim', 'Sublime Text', 'Atom', 'Notepad++'];
-  const isCoding = codeNames.some(name => 
-    activity.name?.toLowerCase().includes(name.toLowerCase()) ||
-    activity.details?.toLowerCase().includes(name.toLowerCase()) ||
-    activity.state?.toLowerCase().includes(name.toLowerCase())
-  );
+  const isCoding = activity.application_id === '383226320970055681' ||
+                   activity.name?.toLowerCase().includes('visual studio code') ||
+                   activity.name?.toLowerCase().includes('vs code') ||
+                   activity.name?.toLowerCase().includes('cursor') ||
+                   activity.name?.toLowerCase().includes('webstorm') ||
+                   activity.name?.toLowerCase().includes('intellij') ||
+                   activity.name?.toLowerCase().includes('pycharm') ||
+                   activity.name?.toLowerCase().includes('phpstorm');
+
+  if (isCoding) {
+    const fileName = activity.details || '';
+    const workspaceName = activity.state || '';
+    
+    return (
+      <div className="p-4 transition-colors duration-200 border-t border-gray-300 relative overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="code-tags-bg">
+          <div className="code-tag">&lt;/&gt;</div>
+          <div className="code-tag">{'{ }'}</div>
+          <div className="code-tag">&lt;div&gt;</div>
+          <div className="code-tag">( )</div>
+          <div className="code-tag">[ ]</div>
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex items-start gap-3">
+            {activityIcon && (
+              <img src={activityIcon} alt={activity.name} className="w-16 h-16 rounded object-cover flex-shrink-0 shadow-md" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                <div className="font-bold text-blue-600 text-base">
+                  Coding in {activity.name}
+                </div>
+              </div>
+              
+              {fileName && (
+                <div className="text-sm text-gray-800 font-mono bg-white/60 px-2 py-1 rounded mb-2 border border-gray-200">
+                  📄 {fileName}
+                </div>
+              )}
+              
+              {workspaceName && (
+                <div className="text-xs text-gray-600 mb-2">
+                  📁 {workspaceName}
+                </div>
+              )}
+              
+              {activity.timestamps?.start && (
+                <div className="flex items-center gap-1 text-xs text-gray-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {elapsed} elapsed
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-3 hover:bg-gray-100 transition-colors duration-200 border-t border-gray-600/70 shadow-md relative overflow-hidden">
-      <div className="flex items-start relative z-10">
-        <div className="flex-shrink-0 mr-3">
+    <div className="p-4 transition-colors duration-200 border-t border-gray-300 relative overflow-hidden bg-white hover:bg-gray-50">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0">
           {activityIcon ? (
-            <img src={activityIcon} alt={activity.name} className="w-16 h-16 rounded object-cover" />
+            <img src={activityIcon} alt={activity.name} className="w-16 h-16 rounded object-cover shadow-sm" />
           ) : (
-            <div className="w-16 h-16 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-16 h-16 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {activity.name.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
 
-        <div className="flex-1">
-          <div className="font-semibold text-black drop-shadow-sm">
-            {isCoding ? '💻 Coding in' : activityType} {activity.name}
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-black text-base mb-1">
+            {activityType} {activity.name}
           </div>
           
-          {isCoding && activity.details && (
-            <div className="text-sm text-gray-700 italic mt-1">
-              📄 {activity.details}
-            </div>
-          )}
-          
-          {activity.state && (
-            <div className="text-sm text-gray-700 italic">
-              {activity.state}
-            </div>
-          )}
-
-          {activity.details && !isCoding && (
-            <div className="text-sm text-gray-700 italic">
+          {activity.details && (
+            <div className="text-sm text-gray-700 mb-1 truncate">
               {activity.details}
             </div>
           )}
           
-          {activity.timestamps?.start && (
-            <div className="text-xs text-gray-600 mt-2 flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-              </svg>
-              ⏱️ {elapsed}
+          {activity.state && (
+            <div className="text-sm text-gray-700 mb-2 truncate">
+              {activity.state}
             </div>
           )}
-
-          {activity.assets?.small_image && (
-            <div className="mt-2 flex items-center">
-              <img 
-                src={getSmallImageUrl(activity.assets.small_image, activity.application_id)} 
-                alt="Icon" 
-                className="w-4 h-4 rounded-full mr-1"
-              />
-              <span className="text-xs text-gray-600">{activity.assets.small_text || ''}</span>
+          
+          {activity.timestamps?.start && (
+            <div className="text-xs text-gray-600 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {elapsed} elapsed
             </div>
           )}
         </div>
       </div>
     </div>
   );
-}
-
-function getSmallImageUrl(smallImage: string, appId?: string): string {
-  if (smallImage.startsWith('mp:external/')) {
-    const match = smallImage.match(/https\/(.*)/i);
-    if (match?.[1]) {
-      return `https://${match[1]}`;
-    }
-    return '';
-  }
-  
-  if (!smallImage.startsWith('http')) {
-    return `https://cdn.discordapp.com/app-assets/${appId}/${smallImage}.png`;
-  }
-  
-  return smallImage;
 }

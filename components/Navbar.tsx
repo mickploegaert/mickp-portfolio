@@ -1,64 +1,55 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import HamburgerMenu from './HamburgerMenu';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 20;
-      setScrolled(isScrolled);
-
-      // Update active section based on scroll position
-      const sections = ['projects', 'about', 'contact'];
-      const current = sections.find(section => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 100 && rect.bottom >= 100;
-        }
-        return false;
-      });
-      setActiveSection(current || '');
+      setScrolled(window.scrollY > 20);
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navItems = [
-    { href: "#projects", label: "Projects" },
-    { href: "#about", label: "About" },
+    { href: "/#projects", label: "Projects" },
+    { href: "/#about", label: "About" },
     { href: "/contact", label: "Contact" },
   ];
 
   return (
-    <nav className="sticky top-0 left-0 right-0 z-10 flex items-start justify-between px-6 pt-2 pb-1 bg-transparent">
+    <nav className={`sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 md:px-6 pt-2 pb-1 transition-all duration-200 ${
+      pathname === '/contact' 
+        ? 'bg-white/90 backdrop-blur-sm'
+        : scrolled ? 'bg-white/90 backdrop-blur-sm shadow-sm' : 'bg-transparent'
+    }`}>
       {/* Logo */}
       <div 
-        className="text-[32px] text-black hover:opacity-70 transition-opacity duration-200 cursor-pointer" 
+        className="text-lg sm:text-xl md:text-2xl lg:text-[32px] text-black hover:opacity-70 transition-opacity duration-200 cursor-pointer"
         style={{ 
           fontFamily: 'Inter, sans-serif', 
           letterSpacing: '-0.06em', 
           fontWeight: 700
         }}
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onClick={() => window.location.href = '/'}
       >
         MICKP
       </div>
 
       {/* Desktop Navigation links */}
-      <div className="hidden md:flex gap-8">
+      <div className="hidden md:flex gap-4 lg:gap-8">
         {navItems.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="relative text-[32px] text-black hover:opacity-70 transition-all duration-200"
+            className="relative text-base sm:text-lg md:text-xl lg:text-[32px] text-black hover:opacity-70 transition-all duration-200"
             style={{
               fontFamily: 'Inter, sans-serif',
               letterSpacing: '-0.06em',
@@ -70,7 +61,7 @@ export default function Navbar() {
         ))}
       </div>
 
-      {/* Mobile menu button */}
+      {/* Mobile menu */}
       <div className="md:hidden">
         <HamburgerMenu 
           navItems={navItems}
