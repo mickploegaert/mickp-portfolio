@@ -4,7 +4,7 @@ import { useState, ReactNode } from 'react';
 
 type Language = 'nl' | 'en';
 
-const translations = {
+const translations: Record<string, Record<string, string>> = {
   nl: {
     'nav.projects': 'Projecten',
     'nav.about': 'Over',

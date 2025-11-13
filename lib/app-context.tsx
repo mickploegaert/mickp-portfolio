@@ -15,7 +15,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const translations = {
+const translations: Record<string, Record<string, string>> = {
   nl: {
     'nav.projects': 'Projecten',
     'nav.about': 'Over',
@@ -77,7 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('nl');
 
   const t = (key: string): string => {
-    return translations[language]?.[key] || key;
+    return translations[language]![key] || key;
   };
 
   const contextValue: AppContextType = {
