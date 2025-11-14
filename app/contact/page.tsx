@@ -196,7 +196,11 @@ export default function Contact() {
                       />
                     </div>
 
-                    {isRecaptchaLoaded && (
+                    {!isRecaptchaLoaded ? (
+                      <div className="flex justify-center">
+                        <div className="text-sm text-gray-500">Loading verification...</div>
+                      </div>
+                    ) : (
                       <div className="flex justify-center">
                         <div 
                           className="g-recaptcha" 
