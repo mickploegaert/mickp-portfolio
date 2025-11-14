@@ -40,9 +40,13 @@ export default function Contact() {
   }, []);
 
   // Function to be called when reCAPTCHA is completed
-  window.onRecaptchaSuccess = () => {
-    setIsVerified(true);
-  };
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.onRecaptchaSuccess = () => {
+        setIsVerified(true);
+      };
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
