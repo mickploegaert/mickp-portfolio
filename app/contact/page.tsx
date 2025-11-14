@@ -1,8 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+
+declare global {
+  interface Window {
+    grecaptcha: any;
+  }
+}
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -13,6 +19,30 @@ export default function Contact() {
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.async = true;
+    script.defer = true;
+    
+    script.onload = () => {
+      setIsRecaptchaLoaded(true);
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
+  // Function to be called when reCAPTCHA is completed
+  window.onRecaptchaSuccess = () => {
+    setIsVerified(true);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -29,6 +59,13 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isVerified) {
+      setSubmitStatus('error');
+      setTimeout(() => setSubmitStatus('idle'), 5000);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
@@ -38,7 +75,10 @@ export default function Contact() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken: window.grecaptcha.getResponse()
+        }),
       });
 
       const data = await response.json();
@@ -46,6 +86,8 @@ export default function Contact() {
       if (response.ok && data.success) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
+        setIsVerified(false);
+        window.grecaptcha.reset();
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
         throw new Error(data.error || 'Failed to send message');
@@ -150,9 +192,19 @@ export default function Contact() {
                       />
                     </div>
 
+                    {isRecaptchaLoaded && (
+                      <div className="flex justify-center">
+                        <div 
+                          className="g-recaptcha" 
+                          data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                          data-callback="onRecaptchaSuccess"
+                        ></div>
+                      </div>
+                    )}
+
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !isVerified}
                       className="w-full py-3 sm:py-4 md:py-6 text-sm sm:text-base md:text-lg font-semibold text-white bg-black hover:bg-gray-800 transition-all duration-300 ease-out transform hover:translate-y-[-2px] hover:shadow-lg border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       style={{
                         fontFamily: 'Inter, sans-serif',

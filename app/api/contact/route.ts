@@ -176,12 +176,42 @@ function logSubmission(name: string, email: string, message: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, message } = await request.json();
+    const { name, email, message, recaptchaToken } = await request.json();
     
     console.log('📨 Processing contact form submission:', { 
       name: name.trim(), 
       email: email.trim() 
     });
+    
+    // Verify reCAPTCHA v2 token
+    if (!recaptchaToken) {
+      return NextResponse.json(
+        { error: 'reCAPTCHA verification failed' },
+        { status: 400 }
+      );
+    }
+
+    const recaptchaResponse = await fetch(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    const recaptchaResult = await recaptchaResponse.json();
+
+    if (!recaptchaResult.success) {
+      console.log('❌ reCAPTCHA verification failed:', recaptchaResult);
+      return NextResponse.json(
+        { error: 'reCAPTCHA verification failed' },
+        { status: 400 }
+      );
+    }
+
+    console.log('✅ reCAPTCHA verification passed');
     
     // Validate form data
     const validation = validateForm(name, email, message);
