@@ -39,7 +39,7 @@ export default function Footer() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-16 p-4 sm:p-6 md:p-8 lg:p-12 lg:p-20 min-h-screen items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-16 p-4 sm:p-6 md:p-8 lg:p-12 lg:p-20 min-h-screen items-center -mt-8 lg:-mt-12">
           {/* Left Text */}
           <div className="lg:col-span-7 lg:col-start-1">
             <h3 
@@ -79,7 +79,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Left Contact Info */}
-        <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 left-4 sm:left-6 md:left-8 lg:left-12 space-y-3 sm:space-y-4">
+        <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 left-4 sm:left-6 md:left-8 lg:left-12 space-y-3 sm:space-y-4 -mb-4 lg:-mb-6">
           <div className="flex items-center gap-2 sm:gap-3">
             <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
