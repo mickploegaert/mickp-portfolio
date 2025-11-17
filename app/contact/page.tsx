@@ -26,7 +26,7 @@ export default function Contact() {
 
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
     script.async = true;
     script.defer = true;
     
