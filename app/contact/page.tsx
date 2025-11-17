@@ -6,7 +6,12 @@ import Footer from '../../components/Footer';
 
 declare global {
   interface Window {
-    grecaptcha: any;
+    grecaptcha: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      getResponse: () => string;
+      reset: () => void;
+    };
   }
 }
 
