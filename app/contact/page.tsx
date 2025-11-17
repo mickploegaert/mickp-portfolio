@@ -4,16 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
-declare global {
-  interface Window {
-    grecaptcha: {
-      ready: (callback: () => void) => void;
-      execute: (siteKey: string, options: { action: string }) => Promise<string>;
-      getResponse: () => string;
-      reset: () => void;
-    };
-  }
-}
+
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -86,7 +77,7 @@ export default function Contact() {
         },
         body: JSON.stringify({
           ...formData,
-          recaptchaToken: window.grecaptcha.getResponse()
+          recaptchaToken: (window.grecaptcha as any).getResponse()
         }),
       });
 
@@ -96,7 +87,7 @@ export default function Contact() {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
         setIsVerified(false);
-        window.grecaptcha.reset();
+        (window.grecaptcha as any).reset();
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
         throw new Error(data.error || 'Failed to send message');
