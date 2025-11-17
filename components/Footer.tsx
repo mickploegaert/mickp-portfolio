@@ -39,7 +39,7 @@ export default function Footer() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-16 p-4 sm:p-6 md:p-8 lg:p-12 lg:p-20 min-h-screen items-center -mt-8 lg:-mt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-16 p-4 sm:p-6 md:p-8 lg:p-12 lg:p-20 min-h-screen items-center -mt-16 lg:-mt-20">
           {/* Left Text */}
           <div className="lg:col-span-7 lg:col-start-1">
             <h3 
