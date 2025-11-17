@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
+declare global {
+  interface Window {
+    onRecaptchaSuccess?: () => void;
+  }
+}
+
 
 
 export default function Contact() {
