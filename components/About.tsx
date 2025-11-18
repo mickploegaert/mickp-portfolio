@@ -7,7 +7,7 @@ export default function About() {
         {/* Header */}
         <div className="mb-8 sm:mb-12" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
           <h2 
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-black"
+            className="text-[clamp(2rem,6vw,4rem)] sm:text-[clamp(2.5rem,6vw,5rem)] md:text-[clamp(3rem,6vw,6rem)] lg:text-[clamp(3.5rem,6vw,7rem)] xl:text-[clamp(4rem,6vw,8rem)] font-black text-black"
             style={{ 
               fontFamily: 'Inter, sans-serif', 
               letterSpacing: '-0.08em' 
@@ -35,7 +35,7 @@ export default function About() {
           {/* Top Left Text */}
           <div className="lg:col-span-5 lg:col-start-1 lg:row-start-1 lg:pr-4" style={{ animation: 'slideUpFade 0.8s ease-out 0.3s both' }}>
             <p
-              className="text-xl sm:text-2xl md:text-3xl lg:text-[36px] leading-[1em] text-black"
+              className="text-[clamp(1.1rem,3vw,1.8rem)] sm:text-[clamp(1.2rem,3vw,2rem)] md:text-[clamp(1.3rem,3vw,2.2rem)] lg:text-[clamp(1.4rem,3vw,2.4rem)] leading-[1em] text-black"
               style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
             >
               I'm an 18-year-old Software Development student at Scalda in Terneuzen. I'm passionate about learning, creating, and improving my coding skills every day.
@@ -58,7 +58,7 @@ export default function About() {
           {/* Bottom Text */}
           <div className="lg:col-span-6 lg:col-start-7 lg:row-start-2 lg:pl-4" style={{ animation: 'slideUpFade 0.8s ease-out 0.4s both' }}>
             <p
-              className="text-xl sm:text-2xl md:text-3xl lg:text-[36px] leading-[1em] text-black"
+              className="text-[clamp(1.1rem,3vw,1.8rem)] sm:text-[clamp(1.2rem,3vw,2rem)] md:text-[clamp(1.3rem,3vw,2.2rem)] lg:text-[clamp(1.4rem,3vw,2.4rem)] leading-[1em] text-black"
               style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
             >
               In my free time, I enjoy playing football, gaming, and running. Staying active helps me stay focused, motivated, and balanced in life.

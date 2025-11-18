@@ -21,7 +21,7 @@ export default function Contact() {
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(true);
+  const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
@@ -73,33 +73,39 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isVerified) {
+      setSubmitStatus('error');
+      setTimeout(() => setSubmitStatus('idle'), 5000);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
-      const recaptchaToken = (window.grecaptcha as any)?.getResponse() || '';
-      
-      const response = await fetch('/api/contact', {
+      const response = await fetch('https://formspree.io/f/mpwkwnap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          recaptchaToken: recaptchaToken
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          'g-recaptcha-response': (window.grecaptcha as any)?.getResponse() || '',
         }),
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (response.ok) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
         setIsVerified(false);
         (window.grecaptcha as any)?.reset?.();
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
-        throw new Error(data.error || 'Failed to send message');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
       }
     } catch (error) {
       console.error('Submit error:', error);

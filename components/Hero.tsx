@@ -11,7 +11,7 @@ export default function Hero() {
       {/* Left column: Name + Email */}
       <div className="lg:col-start-1 lg:row-start-1 lg:row-end-4 flex flex-col justify-start lg:pt-20 lg:pl-8 pt-12 px-4 sm:px-6">
         <h1
-          className="text-[50px] sm:text-[60px] md:text-[80px] lg:text-[120px] xl:text-[150px] 2xl:text-[174px] leading-[1em] text-black"
+          className="text-[clamp(2.5rem,8vw,6rem)] sm:text-[clamp(3rem,8vw,7.5rem)] lg:text-[clamp(5rem,8vw,10.875rem)] xl:text-[clamp(6rem,8vw,11rem)] 2xl:text-[clamp(7rem,8vw,11rem)] leading-[1em] text-black"
           style={{ 
             letterSpacing: '-0.09em', 
             fontFamily: 'Inter, sans-serif', 
@@ -24,7 +24,7 @@ export default function Hero() {
         <div className="mt-8 lg:mt-32 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4" style={{ animation: 'slideUpFade 0.8s ease-out 0.3s both' }}>
           <a
             href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}`}
-            className="text-[18px] sm:text-[20px] md:text-[24px] lg:text-[26px] text-black hover:opacity-60 transition-opacity duration-200 font-bold break-all"
+            className="text-[clamp(1rem,3vw,1.25rem)] sm:text-[clamp(1.1rem,3vw,1.4rem)] md:text-[clamp(1.2rem,3vw,1.6rem)] lg:text-[clamp(1.3rem,3vw,1.7rem)] text-black hover:opacity-60 transition-opacity duration-200 font-bold break-all"
             style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
           >
             {process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}

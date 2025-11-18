@@ -21,9 +21,11 @@ export const metadata: Metadata = {
     shortcut: '/profiel.jpg',
     apple: '/profiel.jpg',
   },
-  security: {
-    referrer: 'origin-when-cross-origin',
-  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
