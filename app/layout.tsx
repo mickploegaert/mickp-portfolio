@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     shortcut: '/profiel.jpg',
     apple: '/profiel.jpg',
   },
+  security: {
+    referrer: 'origin-when-cross-origin',
+  },
 };
 
 export default function RootLayout({
@@ -34,6 +37,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Script
+          src="https://www.google.com/recaptcha/api.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

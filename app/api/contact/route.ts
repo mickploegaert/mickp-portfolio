@@ -69,8 +69,8 @@ async function sendEmailWithResend(name: string, email: string, message: string)
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'portfolio@mickp.dev', // Vervang met je verified domain
-        to: ['243338@student.scalda.nl'], // Direct naar Outlook!
+        from: process.env.FROM_EMAIL || 'portfolio@mickp.dev', // Vervang met je verified domain
+        to: [process.env.CONTACT_EMAIL || '243338@student.scalda.nl'], // Direct naar Outlook!
         subject: `Portfolio Contact: ${name}`,
         replyTo: email,
         html: `
@@ -186,10 +186,12 @@ export async function POST(request: NextRequest) {
     // Verify reCAPTCHA v2 token
     if (!recaptchaToken) {
       return NextResponse.json(
-        { error: 'reCAPTCHA verification failed' },
+        { error: 'reCAPTCHA verification failed - no token provided' },
         { status: 400 }
       );
     }
+
+    console.log('🔐 Verifying reCAPTCHA token:', recaptchaToken.substring(0, 20) + '...');
 
     const recaptchaResponse = await fetch(
       `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
@@ -202,11 +204,12 @@ export async function POST(request: NextRequest) {
     );
 
     const recaptchaResult = await recaptchaResponse.json();
+    console.log('🔍 reCAPTCHA verification result:', recaptchaResult);
 
     if (!recaptchaResult.success) {
-      console.log('❌ reCAPTCHA verification failed:', recaptchaResult);
+      console.log('❌ reCAPTCHA verification failed:', recaptchaResult['error-codes']);
       return NextResponse.json(
-        { error: 'reCAPTCHA verification failed' },
+        { error: `reCAPTCHA verification failed: ${recaptchaResult['error-codes']?.join(', ') || 'Unknown error'}` },
         { status: 400 }
       );
     }
@@ -257,7 +260,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to process your message',
-        message: 'Please try again or contact me directly at 243338@student.scalda.nl',
+        message: 'Please try again or use the contact form again',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

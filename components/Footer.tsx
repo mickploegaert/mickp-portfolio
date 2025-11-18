@@ -71,7 +71,7 @@ export default function Footer() {
                 letterSpacing: '-0.04em',
                 fontWeight: 700
               }}
-              onClick={() => window.location.href = 'mailto:243338@student.scalda.nl'}
+              onClick={() => window.location.href = `mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}`}
             >
               Contact
             </button>

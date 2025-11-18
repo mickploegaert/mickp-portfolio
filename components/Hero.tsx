@@ -23,15 +23,15 @@ export default function Hero() {
         </h1>
         <div className="mt-8 lg:mt-32 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4" style={{ animation: 'slideUpFade 0.8s ease-out 0.3s both' }}>
           <a
-            href="mailto:243338@student.scalda.nl"
+            href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}`}
             className="text-[18px] sm:text-[20px] md:text-[24px] lg:text-[26px] text-black hover:opacity-60 transition-opacity duration-200 font-bold break-all"
             style={{ letterSpacing: '-0.06em', fontFamily: 'Inter, sans-serif', fontWeight: 700 }}
           >
-            243338@student.scalda.nl
+            {process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}
           </a>
           <button
             onClick={() => {
-              navigator.clipboard.writeText('243338@student.scalda.nl');
+              navigator.clipboard.writeText(process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl');
               setCopied(true);
               window.setTimeout(() => setCopied(false), 1200);
             }}

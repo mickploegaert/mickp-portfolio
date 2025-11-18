@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     // In production, you should use a proper email service
     
     const emailData = {
-      to: '243338@student.scalda.nl',
+      to: process.env.CONTACT_EMAIL || '243338@student.scalda.nl',
       from: email,
       subject: `New contact form submission from ${name}`,
       text: `

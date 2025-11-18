@@ -21,7 +21,7 @@ export default function Contact() {
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(false);
+  const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function Contact() {
   };
 
   const copyEmail = () => {
-    navigator.clipboard.writeText('243338@student.scalda.nl');
+    navigator.clipboard.writeText(process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -73,16 +73,12 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isVerified) {
-      setSubmitStatus('error');
-      setTimeout(() => setSubmitStatus('idle'), 5000);
-      return;
-    }
-
     setIsSubmitting(true);
     setSubmitStatus('idle');
 
     try {
+      const recaptchaToken = (window.grecaptcha as any)?.getResponse() || '';
+      
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
@@ -90,7 +86,7 @@ export default function Contact() {
         },
         body: JSON.stringify({
           ...formData,
-          recaptchaToken: (window.grecaptcha as any)?.getResponse() || ''
+          recaptchaToken: recaptchaToken
         }),
       });
 
@@ -134,10 +130,10 @@ export default function Contact() {
                   </h1>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
                     <a 
-                      href="mailto:243338@student.scalda.nl" 
+                      href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}`} 
                       className="text-sm sm:text-base md:text-lg text-black no-underline py-2 hover:opacity-70 transition-opacity break-all"
                     >
-                      243338@student.scalda.nl
+                      {process.env.NEXT_PUBLIC_CONTACT_EMAIL || '243338@student.scalda.nl'}
                     </a>
                     <button 
                       onClick={copyEmail}
@@ -213,7 +209,7 @@ export default function Contact() {
                       <div className="flex justify-center">
                         <div 
                           className="g-recaptcha" 
-                          data-sitekey="6LcnZwwsAAAAAOKB5V9DbMcfysk_gZ74oaGdojDJ"
+                          data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                           data-callback="onRecaptchaSuccess"
                           data-theme="light"
                         ></div>
