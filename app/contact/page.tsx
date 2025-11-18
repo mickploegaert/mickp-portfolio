@@ -25,8 +25,9 @@ export default function Contact() {
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
+    // Load reCAPTCHA script
     const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`;
+    script.src = `https://www.google.com/recaptcha/api.js`;
     script.async = true;
     script.defer = true;
     
@@ -34,10 +35,16 @@ export default function Contact() {
       setIsRecaptchaLoaded(true);
     };
 
+    script.onerror = () => {
+      console.error('Failed to load reCAPTCHA script');
+    };
+
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
     };
   }, []);
 
@@ -83,7 +90,7 @@ export default function Contact() {
         },
         body: JSON.stringify({
           ...formData,
-          recaptchaToken: (window.grecaptcha as any).getResponse()
+          recaptchaToken: (window.grecaptcha as any)?.getResponse() || ''
         }),
       });
 
@@ -93,7 +100,7 @@ export default function Contact() {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
         setIsVerified(false);
-        (window.grecaptcha as any).reset();
+        (window.grecaptcha as any)?.reset?.();
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
         throw new Error(data.error || 'Failed to send message');
@@ -206,8 +213,9 @@ export default function Contact() {
                       <div className="flex justify-center">
                         <div 
                           className="g-recaptcha" 
-                          data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                          data-sitekey="6LcnZwwsAAAAAOKB5V9DbMcfysk_gZ74oaGdojDJ"
                           data-callback="onRecaptchaSuccess"
+                          data-theme="light"
                         ></div>
                       </div>
                     )}

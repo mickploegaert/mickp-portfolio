@@ -43,15 +43,15 @@ export default function Projects() {
                  animation: 'slideUpFade 0.8s ease-out 0.3s both',
                  aspectRatio: '1/1'
                }}
-               onClick={() => window.open('https://github.com', '_blank')}>
+               onClick={() => window.open('https://resplendent-queijadas-1822c3.netlify.app/', '_blank')}>
             <img
               src="https://picsum.photos/600/600?random=2"
-              alt="Weather Dashboard"
+              alt="Dropship Dashboard"
               className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
             />
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-black/90 to-transparent">
               <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Weather Dashboard
+                Dropship Dashboard
               </h3>
             </div>
           </div>

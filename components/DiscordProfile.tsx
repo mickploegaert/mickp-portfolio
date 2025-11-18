@@ -71,13 +71,6 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatSongTime = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   const getActivityIcon = (activity: Activity) => {
     if (activity.assets?.large_image) {
       let imageUrl = activity.assets.large_image;
@@ -251,39 +244,11 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
   const avatarUrl = getUserAvatar(presenceData);
   const statusInfo = getStatusInfo(presenceData.discord_status);
 
-  const spotifyActivity = presenceData.listening_to_spotify && presenceData.spotify;
   const allActivities = presenceData.activities || [];
 
   return (
     <div className="bg-white rounded-xl w-full max-w-[380px] sm:max-w-[420px] md:max-w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300 hover:shadow-2xl transition-shadow duration-300">
       <style>{`
-        .spotify-eq-bg .eq-bar {
-          width: 18%;
-          margin: 0 1%;
-          border-radius: 0;
-          animation: eqbar-up 1.1s infinite;
-          background: #1DB954;
-          opacity: 0.6;
-          align-self: flex-end;
-          height: var(--eq-base, 60%);
-        }
-        .spotify-eq-bg .eq-bar:nth-child(1) { animation-delay: 0s; }
-        .spotify-eq-bg .eq-bar:nth-child(2) { animation-delay: 0.12s; }
-        .spotify-eq-bg .eq-bar:nth-child(3) { animation-delay: 0.24s; }
-        .spotify-eq-bg .eq-bar:nth-child(4) { animation-delay: 0.18s; }
-        .spotify-eq-bg .eq-bar:nth-child(5) { animation-delay: 0.3s; }
-        .spotify-eq-bg .eq-bar:nth-child(6) { animation-delay: 0.08s; }
-        .spotify-eq-bg .eq-bar:nth-child(7) { animation-delay: 0.2s; }
-        .spotify-eq-bg .eq-bar:nth-child(8) { animation-delay: 0.32s; }
-        .spotify-eq-bg .eq-bar:nth-child(9) { animation-delay: 0.16s; }
-        @keyframes eqbar-up {
-          0%, 100% { height: var(--eq-base, 60%); }
-          20% { height: calc(var(--eq-base, 60%) + 60%); }
-          40% { height: calc(var(--eq-base, 60%) + 30%); }
-          60% { height: calc(var(--eq-base, 60%) + 50%); }
-          80% { height: calc(var(--eq-base, 60%) + 20%); }
-        }
-        
         .code-tags-bg {
           position: absolute;
           top: 0;
@@ -349,96 +314,24 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
         </div>
       </div>
 
-      {spotifyActivity && (
-        <SpotifyActivity spotify={presenceData.spotify!} formatSongTime={formatSongTime} />
-      )}
-
       {allActivities.length > 0 ? (
         allActivities
-          .filter(activity => activity.name !== 'Spotify')
+          .filter(activity => {
+            if (activity.name === 'Spotify') return false;
+            const isCoding = activity.application_id === '383226320970055681' ||
+                           activity.name?.toLowerCase().includes('visual studio code') ||
+                           activity.name?.toLowerCase().includes('vs code') ||
+                           activity.name?.toLowerCase().includes('cursor') ||
+                           activity.name?.toLowerCase().includes('webstorm') ||
+                           activity.name?.toLowerCase().includes('intellij') ||
+                           activity.name?.toLowerCase().includes('pycharm') ||
+                           activity.name?.toLowerCase().includes('phpstorm');
+            return isCoding;
+          })
           .map((activity, idx) => (
             <ActivityItem key={idx} activity={activity} formatElapsedTime={formatElapsedTime} getActivityIcon={getActivityIcon} />
           ))
-      ) : !spotifyActivity ? (
-        <div className="p-4 text-center text-gray-600">No activities right now</div>
       ) : null}
-    </div>
-  );
-}
-
-function SpotifyActivity({ spotify, formatSongTime }: {
-  spotify: SpotifyData;
-  formatSongTime: (ms: number) => string;
-}) {
-  const [progress, setProgress] = useState(0);
-  const [elapsed, setElapsed] = useState('0:00');
-  const [total, setTotal] = useState('0:00');
-
-  useEffect(() => {
-    if (spotify.timestamps) {
-      const updateProgress = () => {
-        const now = Date.now();
-        const totalMs = spotify.timestamps!.end - spotify.timestamps!.start;
-        const elapsedMs = Math.max(0, Math.min(now - spotify.timestamps!.start, totalMs));
-        const percent = Math.min(100, (elapsedMs / totalMs) * 100);
-        
-        setProgress(percent);
-        setElapsed(formatSongTime(elapsedMs));
-        setTotal(formatSongTime(totalMs));
-      };
-
-      updateProgress();
-      const interval = setInterval(updateProgress, 200);
-      return () => clearInterval(interval);
-    }
-  }, [spotify, formatSongTime]);
-
-  return (
-    <div className="p-3 hover:bg-gray-100 transition-colors duration-200 border-t border-green-600/70 shadow-md relative overflow-hidden">
-      <div className="absolute left-0 right-0 bottom-0 h-10 flex items-end pointer-events-none z-0 spotify-eq-bg">
-        <div className="flex h-full w-full items-end justify-between gap-0.5">
-          {[60, 80, 40, 90, 70, 55, 65, 50, 85].map((height, i) => (
-            <div key={i} className="eq-bar" style={{ '--eq-base': `${height}%` } as React.CSSProperties} />
-          ))}
-        </div>
-      </div>
-      
-      <div className="flex items-start relative z-10">
-        <div className="flex-shrink-0 mr-3">
-          {spotify.album_art_url ? (
-            <img src={spotify.album_art_url} alt="Album Art" className="w-16 h-16 rounded object-cover" />
-          ) : (
-            <div className="w-16 h-16 bg-[#1DB954] rounded flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-              </svg>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[#1DB954]" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-            </svg>
-            <div className="font-semibold text-green-600 drop-shadow-sm">Listening to Spotify</div>
-          </div>
-          <div className="text-sm text-black font-medium mt-1">{spotify.song}</div>
-          <div className="text-xs text-gray-700">by {spotify.artist}</div>
-          <div className="text-xs text-gray-700 mb-2">on {spotify.album}</div>
-          
-          <div className="mt-2 mb-2">
-            <div className="bg-gray-300 h-1.5 rounded-full w-full overflow-hidden">
-              <div className="bg-green-500 h-full rounded-full transition-all" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-          
-          <div className="flex justify-between text-xs text-gray-700">
-            <span>{elapsed}</span>
-            <span>{total}</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -464,17 +357,6 @@ function ActivityItem({ activity, formatElapsedTime, getActivityIcon }: {
 
   const activityIcon = getActivityIcon(activity);
   
-  const activityTypeMap: Record<number, string> = {
-    0: 'Playing',
-    1: 'Streaming',
-    2: 'Listening to',
-    3: 'Watching',
-    4: 'Custom Status:',
-    5: 'Competing in',
-  };
-
-  const activityType = activityTypeMap[activity.type] || 'Using';
-
   const isCoding = activity.application_id === '383226320970055681' ||
                    activity.name?.toLowerCase().includes('visual studio code') ||
                    activity.name?.toLowerCase().includes('vs code') ||
@@ -540,46 +422,5 @@ function ActivityItem({ activity, formatElapsedTime, getActivityIcon }: {
     );
   }
 
-  return (
-    <div className="p-4 transition-colors duration-200 border-t border-gray-300 relative overflow-hidden bg-white hover:bg-gray-50">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0">
-          {activityIcon ? (
-            <img src={activityIcon} alt={activity.name} className="w-16 h-16 rounded object-cover shadow-sm" />
-          ) : (
-            <div className="w-16 h-16 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold shadow-sm">
-              {activity.name.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-black text-base mb-1">
-            {activityType} {activity.name}
-          </div>
-          
-          {activity.details && (
-            <div className="text-sm text-gray-700 mb-1 truncate">
-              {activity.details}
-            </div>
-          )}
-          
-          {activity.state && (
-            <div className="text-sm text-gray-700 mb-2 truncate">
-              {activity.state}
-            </div>
-          )}
-          
-          {activity.timestamps?.start && (
-            <div className="text-xs text-gray-600 flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {elapsed} elapsed
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }
