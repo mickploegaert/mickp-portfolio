@@ -20,14 +20,23 @@ export default function Contact() {
   const [recaptchaResponse, setRecaptchaResponse] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load reCAPTCHA script
+    // Load reCAPTCHA script with explicit parameters
     const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js`;
+    script.src = `https://www.google.com/recaptcha/api.js?render=explicit&hl=en`;
     script.async = true;
     script.defer = true;
     
     script.onload = () => {
-      setIsRecaptchaLoaded(true);
+      console.log('reCAPTCHA script loaded successfully');
+      // Wait a bit for grecaptcha to be available
+      setTimeout(() => {
+        if (window.grecaptcha) {
+          setIsRecaptchaLoaded(true);
+          console.log('reCAPTCHA is ready');
+        } else {
+          console.error('grecaptcha not available after script load');
+        }
+      }, 500);
     };
 
     script.onerror = () => {
@@ -60,6 +69,27 @@ export default function Contact() {
       };
     }
   }, []);
+
+  // Effect to render reCAPTCHA when the element is available
+  useEffect(() => {
+    if (isRecaptchaLoaded && typeof window !== 'undefined' && window.grecaptcha) {
+      const recaptchaElement = document.getElementById('recaptcha-element') as HTMLElement;
+      if (recaptchaElement && !recaptchaElement.hasChildNodes()) {
+        try {
+          window.grecaptcha.render(recaptchaElement, {
+            sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+            callback: 'onRecaptchaSuccess',
+            'expired-callback': 'onRecaptchaExpired',
+            theme: 'light',
+            size: 'normal'
+          });
+          console.log('reCAPTCHA rendered successfully');
+        } catch (error) {
+          console.error('Error rendering reCAPTCHA:', error);
+        }
+      }
+    }
+  }, [isRecaptchaLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -220,11 +250,7 @@ export default function Contact() {
                       <div className="recaptcha-container py-2 sm:py-3 md:py-4">
                         <div 
                           className="g-recaptcha" 
-                          data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                          data-callback="onRecaptchaSuccess"
-                          data-expired-callback="onRecaptchaExpired"
-                          data-theme="light"
-                          data-size="normal"
+                          id="recaptcha-element"
                         ></div>
                       </div>
                     )}
