@@ -24,3 +24,85 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* reCAPTCHA responsive styles */
+.g-recaptcha {
+  display: inline-block !important;
+  transition: transform 0.3s ease;
+}
+
+/* Mobile devices - very small screens */
+@media screen and (max-width: 380px) {
+  .g-recaptcha {
+    transform: scale(0.65) !important;
+    transform-origin: 0 0 !important;
+  }
+  
+  /* Add space for scaled reCAPTCHA */
+  .recaptcha-container {
+    min-height: 100px;
+  }
+}
+
+/* Small mobile devices */
+@media screen and (min-width: 381px) and (max-width: 479px) {
+  .g-recaptcha {
+    transform: scale(0.75) !important;
+    transform-origin: 0 0 !important;
+  }
+  
+  .recaptcha-container {
+    min-height: 90px;
+  }
+}
+
+/* Medium mobile devices */
+@media screen and (min-width: 480px) and (max-width: 639px) {
+  .g-recaptcha {
+    transform: scale(0.85) !important;
+    transform-origin: 0 0 !important;
+  }
+  
+  .recaptcha-container {
+    min-height: 85px;
+  }
+}
+
+/* Tablet devices */
+@media screen and (min-width: 640px) and (max-width: 767px) {
+  .g-recaptcha {
+    transform: scale(0.95) !important;
+    transform-origin: 0 0 !important;
+  }
+  
+  .recaptcha-container {
+    min-height: 80px;
+  }
+}
+
+/* Small desktop and up */
+@media screen and (min-width: 768px) {
+  .g-recaptcha {
+    transform: scale(1.0) !important;
+    transform-origin: 0 0 !important;
+  }
+  
+  .recaptcha-container {
+    min-height: 78px;
+  }
+}
+
+/* Ensure reCAPTCHA container doesn't overflow on small screens */
+@media screen and (max-width: 639px) {
+  .recaptcha-container {
+    overflow-x: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* Prevent horizontal scroll on the page */
+  body {
+    overflow-x: hidden;
+  }
+}

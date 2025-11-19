@@ -4,12 +4,6 @@ import { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
-declare global {
-  interface Window {
-    onRecaptchaSuccess?: () => void;
-  }
-}
-
 
 
 export default function Contact() {
@@ -23,6 +17,7 @@ export default function Contact() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [recaptchaResponse, setRecaptchaResponse] = useState<string | null>(null);
 
   useEffect(() => {
     // Load reCAPTCHA script
@@ -51,8 +46,17 @@ export default function Contact() {
   // Function to be called when reCAPTCHA is completed
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      window.onRecaptchaSuccess = () => {
+      window.onRecaptchaSuccess = (response: string) => {
+        console.log('reCAPTCHA verified:', response);
+        setRecaptchaResponse(response);
         setIsVerified(true);
+      };
+      
+      // Also listen for reCAPTCHA expiration
+      window.onRecaptchaExpired = () => {
+        console.log('reCAPTCHA expired');
+        setRecaptchaResponse(null);
+        setIsVerified(false);
       };
     }
   }, []);
@@ -93,7 +97,7 @@ export default function Contact() {
           name: formData.name,
           email: formData.email,
           message: formData.message,
-          'g-recaptcha-response': (window.grecaptcha as any)?.getResponse() || '',
+          'g-recaptcha-response': recaptchaResponse || '',
         }),
       });
 
@@ -101,7 +105,8 @@ export default function Contact() {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
         setIsVerified(false);
-        (window.grecaptcha as any)?.reset?.();
+        setRecaptchaResponse(null);
+        window.grecaptcha?.reset?.();
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
         const errorData = await response.json();
@@ -208,16 +213,18 @@ export default function Contact() {
                     </div>
 
                     {!isRecaptchaLoaded ? (
-                      <div className="flex justify-center">
+                      <div className="recaptcha-container flex justify-center items-center py-8">
                         <div className="text-sm text-gray-500">Loading verification...</div>
                       </div>
                     ) : (
-                      <div className="flex justify-center">
+                      <div className="recaptcha-container py-2 sm:py-3 md:py-4">
                         <div 
                           className="g-recaptcha" 
                           data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                           data-callback="onRecaptchaSuccess"
+                          data-expired-callback="onRecaptchaExpired"
                           data-theme="light"
+                          data-size="normal"
                         ></div>
                       </div>
                     )}
@@ -225,7 +232,11 @@ export default function Contact() {
                     <button
                       type="submit"
                       disabled={isSubmitting || !isVerified}
-                      className="w-full py-3 sm:py-4 md:py-6 text-sm sm:text-base md:text-lg font-semibold text-white bg-black hover:bg-gray-800 transition-all duration-300 ease-out transform hover:translate-y-[-2px] hover:shadow-lg border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      className={`w-full py-3 sm:py-4 md:py-6 text-sm sm:text-base md:text-lg font-semibold transition-all duration-300 ease-out border-none cursor-pointer ${
+                        isSubmitting || !isVerified
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed transform-none'
+                          : 'bg-black text-white hover:bg-gray-800 transform hover:translate-y-[-2px] hover:shadow-lg'
+                      }`}
                       style={{
                         fontFamily: 'Inter, sans-serif',
                         letterSpacing: '-0.04em',
@@ -237,7 +248,7 @@ export default function Contact() {
 
                     {submitStatus === 'success' && (
                       <div className="p-3 sm:p-4 bg-green-100 border border-green-400 text-green-700 rounded text-sm sm:text-base">
-                        ✅ Message received successfully! I'll get back to you soon.
+                        ✅ Message received successfully! I&apos;ll get back to you soon.
                       </div>
                     )}
 

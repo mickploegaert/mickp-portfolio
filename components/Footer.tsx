@@ -5,7 +5,7 @@ export default function Footer() {
     <div className="relative bg-black text-white min-h-screen">
       <div className="relative h-auto w-full min-h-screen">
         {/* Social Icons */}
-        <div className="absolute top-4 sm:top-6 md:top-8 lg:top-12 right-4 sm:right-6 md:right-8 lg:right-12 flex gap-3 sm:gap-4 z-20">
+        <div className="absolute top-12 sm:top-16 md:top-20 lg:top-24 right-4 sm:right-6 md:right-8 lg:right-12 flex gap-3 sm:gap-4 z-20">
           <a 
             href="https://instagram.com" 
             target="_blank" 
