@@ -30,7 +30,7 @@ export default function Projects() {
             aria-label="Open Health Advisor App project"
           >
             <img
-              src="/healtadvisor.jpeg"
+              src="https://picsum.photos/600/600?seed=healthapp"
               alt="Health Advisor App"
               width={600}
               height={600}
@@ -54,7 +54,7 @@ export default function Projects() {
             aria-label="Open Dropship Dashboard project"
           >
             <img
-              src="https://picsum.photos/600/600?random=2"
+              src="https://picsum.photos/600/600?seed=dropship"
               alt="Dropship Dashboard"
               width={600}
               height={600}
@@ -79,7 +79,7 @@ export default function Projects() {
             aria-label="Open Task Manager project"
           >
             <img
-              src="https://picsum.photos/600/600?random=3"
+              src="https://picsum.photos/600/600?seed=taskmanager"
               alt="Task Manager"
               width={600}
               height={600}
@@ -103,7 +103,7 @@ export default function Projects() {
             aria-label="Open Social Media Clone project"
           >
             <img
-              src="https://picsum.photos/600/600?random=4"
+              src="https://picsum.photos/600/600?seed=socialmedia"
               alt="Social Media Clone"
               width={600}
               height={600}
