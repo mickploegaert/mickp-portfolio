@@ -28,10 +28,11 @@ export default function Contact() {
     
     script.onload = () => {
       console.log('reCAPTCHA script loaded successfully');
+      console.log('Site key:', process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
       setTimeout(() => {
         setIsRecaptchaLoaded(true);
-        console.log('reCAPTCHA ready');
-      }, 500);
+        console.log('reCAPTCHA ready, checking for grecaptcha:', !!window.grecaptcha);
+      }, 1000);
     };
 
     script.onerror = () => {
@@ -219,14 +220,19 @@ export default function Contact() {
                     {isRecaptchaLoaded ? (
                       <div className="recaptcha-container py-2 sm:py-3 md:py-4">
                         <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
-                        <div 
-                          className="g-recaptcha" 
-                          data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                          data-callback="onRecaptchaSuccess"
-                          data-expired-callback="onRecaptchaExpired"
-                          data-theme="light"
-                          data-size="normal"
-                        ></div>
+                        <div className="border border-gray-300 p-4 rounded">
+                          <div 
+                            className="g-recaptcha" 
+                            data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                            data-callback="onRecaptchaSuccess"
+                            data-expired-callback="onRecaptchaExpired"
+                            data-theme="light"
+                            data-size="normal"
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Site key: {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.substring(0, 10)}...
+                        </div>
                       </div>
                     ) : (
                       <div className="recaptcha-container flex justify-center items-center py-8">
