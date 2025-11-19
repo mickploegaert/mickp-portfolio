@@ -20,22 +20,17 @@ export default function Contact() {
   const [recaptchaResponse, setRecaptchaResponse] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load reCAPTCHA script with explicit parameters
+    // Load reCAPTCHA script with automatic rendering
     const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?render=explicit&hl=en`;
+    script.src = `https://www.google.com/recaptcha/api.js?hl=en`;
     script.async = true;
     script.defer = true;
     
     script.onload = () => {
       console.log('reCAPTCHA script loaded successfully');
-      // Wait a bit for grecaptcha to be available
       setTimeout(() => {
-        if (window.grecaptcha) {
-          setIsRecaptchaLoaded(true);
-          console.log('reCAPTCHA is ready');
-        } else {
-          console.error('grecaptcha not available after script load');
-        }
+        setIsRecaptchaLoaded(true);
+        console.log('reCAPTCHA ready');
       }, 500);
     };
 
@@ -69,27 +64,6 @@ export default function Contact() {
       };
     }
   }, []);
-
-  // Effect to render reCAPTCHA when the element is available
-  useEffect(() => {
-    if (isRecaptchaLoaded && typeof window !== 'undefined' && window.grecaptcha) {
-      const recaptchaElement = document.getElementById('recaptcha-element') as HTMLElement;
-      if (recaptchaElement && !recaptchaElement.hasChildNodes()) {
-        try {
-          window.grecaptcha.render(recaptchaElement, {
-            sitekey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-            callback: 'onRecaptchaSuccess',
-            'expired-callback': 'onRecaptchaExpired',
-            theme: 'light',
-            size: 'normal'
-          });
-          console.log('reCAPTCHA rendered successfully');
-        } catch (error) {
-          console.error('Error rendering reCAPTCHA:', error);
-        }
-      }
-    }
-  }, [isRecaptchaLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -242,16 +216,21 @@ export default function Contact() {
                       />
                     </div>
 
-                    {!isRecaptchaLoaded ? (
-                      <div className="recaptcha-container flex justify-center items-center py-8">
-                        <div className="text-sm text-gray-500">Loading verification...</div>
-                      </div>
-                    ) : (
+                    {isRecaptchaLoaded ? (
                       <div className="recaptcha-container py-2 sm:py-3 md:py-4">
+                        <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
                         <div 
                           className="g-recaptcha" 
-                          id="recaptcha-element"
+                          data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                          data-callback="onRecaptchaSuccess"
+                          data-expired-callback="onRecaptchaExpired"
+                          data-theme="light"
+                          data-size="normal"
                         ></div>
+                      </div>
+                    ) : (
+                      <div className="recaptcha-container flex justify-center items-center py-8">
+                        <div className="text-sm text-gray-500">Loading verification...</div>
                       </div>
                     )}
 
