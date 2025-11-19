@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-
-
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -15,62 +14,20 @@ export default function Contact() {
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [isRecaptchaLoaded, setIsRecaptchaLoaded] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [recaptchaResponse, setRecaptchaResponse] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Load reCAPTCHA script with automatic rendering
-    const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?hl=en`;
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => {
-      console.log('reCAPTCHA script loaded successfully');
-      console.log('Site key:', process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
-      setTimeout(() => {
-        setIsRecaptchaLoaded(true);
-        console.log('reCAPTCHA ready, checking for grecaptcha:', !!window.grecaptcha);
-      }, 1000);
-    };
-
-    script.onerror = () => {
-      console.error('Failed to load reCAPTCHA script');
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, []);
-
-  // Function to be called when reCAPTCHA is completed
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.onRecaptchaSuccess = (response: string) => {
-        console.log('reCAPTCHA verified:', response);
-        setRecaptchaResponse(response);
-        setIsVerified(true);
-      };
-      
-      // Also listen for reCAPTCHA expiration
-      window.onRecaptchaExpired = () => {
-        console.log('reCAPTCHA expired');
-        setRecaptchaResponse(null);
-        setIsVerified(false);
-      };
-    }
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleRecaptchaChange = (response: string | null) => {
+    console.log('reCAPTCHA response:', response);
+    setRecaptchaResponse(response);
+    setIsVerified(!!response);
   };
 
   const copyEmail = () => {
@@ -111,7 +68,6 @@ export default function Contact() {
         setFormData({ name: '', email: '', message: '' });
         setIsVerified(false);
         setRecaptchaResponse(null);
-        window.grecaptcha?.reset?.();
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
         const errorData = await response.json();
@@ -217,28 +173,15 @@ export default function Contact() {
                       />
                     </div>
 
-                    {isRecaptchaLoaded ? (
-                      <div className="recaptcha-container py-2 sm:py-3 md:py-4">
-                        <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
-                        <div className="border border-gray-300 p-4 rounded">
-                          <div 
-                            className="g-recaptcha" 
-                            data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                            data-callback="onRecaptchaSuccess"
-                            data-expired-callback="onRecaptchaExpired"
-                            data-theme="light"
-                            data-size="normal"
-                          ></div>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-2">
-                          Site key: {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY?.substring(0, 10)}...
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="recaptcha-container flex justify-center items-center py-8">
-                        <div className="text-sm text-gray-500">Loading verification...</div>
-                      </div>
-                    )}
+                    <div className="recaptcha-container py-2 sm:py-3 md:py-4">
+                      <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
+                      <ReCAPTCHA
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                        onChange={handleRecaptchaChange}
+                        theme="light"
+                        size="normal"
+                      />
+                    </div>
 
                     <button
                       type="submit"
