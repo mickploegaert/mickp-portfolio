@@ -140,26 +140,42 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
           setError('Timeout waiting for Discord data');
           setLoading(false);
         }
-      }, 10000);
+      }, 15000);
       dataTimeoutRef.current = timeout;
 
       fetch(`https://api.lanyard.rest/v1/users/${userId}`, {
         mode: 'cors',
-        headers: { 'Accept': 'application/json' },
+        headers: { 
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
       })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        })
         .then(data => {
           if (isMounted && data.success) {
             setPresenceData(data.data);
             setError(null);
             setLoading(false);
             if (dataTimeoutRef.current) clearTimeout(dataTimeoutRef.current);
+          } else {
+            throw new Error(data.message || 'API returned error');
           }
         })
         .catch(err => {
           console.error('Fetch error:', err);
           if (isMounted) {
-            setError('Failed to load Discord data');
+            if (err.message.includes('CORS')) {
+              setError('CORS error - please check browser console');
+            } else if (err.message.includes('Failed to fetch')) {
+              setError('Network error - please check connection');
+            } else {
+              setError(`Failed to load Discord data: ${err.message}`);
+            }
             setLoading(false);
           }
         });
@@ -167,34 +183,43 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
       socketRef.current = new WebSocket('wss://api.lanyard.rest/socket');
 
       socketRef.current.addEventListener('open', () => {
+        console.log('WebSocket connected');
         socketRef.current?.send(JSON.stringify({
           op: 2,
           d: { subscribe_to_ids: [userId] },
         }));
 
         heartbeatRef.current = setInterval(() => {
-          socketRef.current?.send(JSON.stringify({ op: 3 }));
+          if (socketRef.current?.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({ op: 3 }));
+          }
         }, 30000);
       });
 
       socketRef.current.addEventListener('message', event => {
-        const message = JSON.parse(event.data);
-        if (message.t === 'INIT_STATE' || message.t === 'PRESENCE_UPDATE') {
-          const data = message.d?.[userId] || message.d;
-          if (isMounted && data) {
-            setPresenceData(data);
-            setError(null);
-            setLoading(false);
-            if (dataTimeoutRef.current) clearTimeout(dataTimeoutRef.current);
+        try {
+          const message = JSON.parse(event.data);
+          if (message.t === 'INIT_STATE' || message.t === 'PRESENCE_UPDATE') {
+            const data = message.d?.[userId] || message.d;
+            if (isMounted && data) {
+              setPresenceData(data);
+              setError(null);
+              setLoading(false);
+              if (dataTimeoutRef.current) clearTimeout(dataTimeoutRef.current);
+            }
           }
+        } catch (err) {
+          console.error('WebSocket message error:', err);
         }
       });
 
-      socketRef.current.addEventListener('error', () => {
-        console.warn('WebSocket error');
-        if (isMounted) {
-          setError('Connection error');
-        }
+      socketRef.current.addEventListener('error', (err) => {
+        console.error('WebSocket error:', err);
+        // Don't set error here - fetch will handle initial load
+      });
+
+      socketRef.current.addEventListener('close', () => {
+        console.log('WebSocket closed');
       });
     };
 
@@ -206,7 +231,7 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
   if (loading) {
     return (
       <div className="bg-white rounded-xl w-full max-w-[380px] sm:max-w-[420px] md:max-w-[460px] shadow-xl overflow-hidden text-black flex-shrink-0 self-start border border-gray-300">
-        <div className="h-24 bg-gray-200" />
+        <div className="h-32 bg-cover bg-center bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=200&fit=crop')" }} />
         <div className="p-6 border-b border-gray-300">
           <div className="flex items-center">
             <div className="w-24 h-24 rounded-full bg-gray-200 -mt-14 animate-pulse" />
@@ -289,11 +314,15 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
       `}</style>
 
       <div className="relative">
-        <div className="h-24 bg-cover bg-center bg-gray-200" style={{ backgroundImage: "url('https://dcdn.dstn.to/banners/719831189585657877')" }} />
+        <div className="h-32 bg-cover bg-center bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&h=300&fit=crop')" }}>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-purple-900/30" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900/20 via-transparent to-pink-900/20" />
+        </div>
         
         <div className="p-6 border-b border-gray-300 pb-7">
           <div className="flex items-center">
-            <div className="relative w-24 h-24 mr-5 -mt-14">
+            <div className="relative w-24 h-24 mr-5 -mt-16">
               <div className="w-full h-full rounded-full overflow-hidden border-4 border-white/80 bg-gray-300 shadow-lg flex items-center justify-center text-black font-bold text-3xl">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
@@ -304,10 +333,18 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
               <span className={`absolute -bottom-1 right-2 w-6 h-6 rounded-full border-4 border-white ${statusInfo.dotColor}`} />
             </div>
             
-            <div className="mt-2">
+            <div className="mt-2 flex-1">
               <div className="text-2xl font-extrabold text-black drop-shadow-sm">
-                {displayName}
-                <span className="text-gray-600 text-base italic font-medium ml-2">({username}{discriminator})</span>
+                Mick Ploegaert
+              </div>
+              <div className="text-gray-600 text-base italic font-medium">
+                {username}{discriminator}
+              </div>
+              <div className="text-sm text-gray-700 mt-2 font-medium flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                243338@student.scalda.nl
               </div>
             </div>
           </div>
@@ -321,11 +358,16 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
             const isCoding = activity.application_id === '383226320970055681' ||
                            activity.name?.toLowerCase().includes('visual studio code') ||
                            activity.name?.toLowerCase().includes('vs code') ||
+                           activity.name?.toLowerCase().includes('vscode') ||
+                           activity.name?.toLowerCase().includes('visual studio') ||
                            activity.name?.toLowerCase().includes('cursor') ||
                            activity.name?.toLowerCase().includes('webstorm') ||
                            activity.name?.toLowerCase().includes('intellij') ||
                            activity.name?.toLowerCase().includes('pycharm') ||
-                           activity.name?.toLowerCase().includes('phpstorm');
+                           activity.name?.toLowerCase().includes('phpstorm') ||
+                           activity.name?.toLowerCase().includes('code') ||
+                           activity.application_id === '538548835511736327' || // Cursor ID
+                           activity.application_id === '793278139363549194'; // VS Code ID
             return isCoding;
           })
           .map((activity, idx) => (
@@ -360,11 +402,16 @@ function ActivityItem({ activity, formatElapsedTime, getActivityIcon }: {
   const isCoding = activity.application_id === '383226320970055681' ||
                    activity.name?.toLowerCase().includes('visual studio code') ||
                    activity.name?.toLowerCase().includes('vs code') ||
+                   activity.name?.toLowerCase().includes('vscode') ||
+                   activity.name?.toLowerCase().includes('visual studio') ||
                    activity.name?.toLowerCase().includes('cursor') ||
                    activity.name?.toLowerCase().includes('webstorm') ||
                    activity.name?.toLowerCase().includes('intellij') ||
                    activity.name?.toLowerCase().includes('pycharm') ||
-                   activity.name?.toLowerCase().includes('phpstorm');
+                   activity.name?.toLowerCase().includes('phpstorm') ||
+                   activity.name?.toLowerCase().includes('code') ||
+                   activity.application_id === '538548835511736327' || // Cursor ID
+                   activity.application_id === '793278139363549194'; // VS Code ID
 
   if (isCoding) {
     const fileName = activity.details || '';

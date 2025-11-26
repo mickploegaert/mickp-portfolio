@@ -175,12 +175,18 @@ export default function Contact() {
 
                     <div className="recaptcha-container py-2 sm:py-3 md:py-4">
                       <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
-                      <ReCAPTCHA
-                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                        onChange={handleRecaptchaChange}
-                        theme="light"
-                        size="normal"
-                      />
+                      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? (
+                        <ReCAPTCHA
+                          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                          onChange={handleRecaptchaChange}
+                          theme="light"
+                          size="normal"
+                        />
+                      ) : (
+                        <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">
+                          ⚠️ reCAPTCHA not configured. Please check environment variables.
+                        </div>
+                      )}
                     </div>
 
                     <button
