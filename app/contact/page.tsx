@@ -175,16 +175,10 @@ export default function Contact() {
 
                     <div className="turnstile-container py-2 sm:py-3 md:py-4">
                       <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
-                      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
-                        <Turnstile
-                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                          onSuccess={handleTurnstileChange}
-                        />
-                      ) : (
-                        <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">
-                          ⚠️ Turnstile not configured. Please check environment variables.
-                        </div>
-                      )}
+                      <Turnstile
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAACDEGW_UWjdgn3Va"}
+                        onSuccess={handleTurnstileChange}
+                      />
                     </div>
 
                     <button
