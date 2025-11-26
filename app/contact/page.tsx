@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -15,7 +15,7 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isVerified, setIsVerified] = useState(false);
-  const [recaptchaResponse, setRecaptchaResponse] = useState<string | null>(null);
+  const [turnstileResponse, setTurnstileResponse] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -24,9 +24,9 @@ export default function Contact() {
     });
   };
 
-  const handleRecaptchaChange = (response: string | null) => {
-    console.log('reCAPTCHA response:', response);
-    setRecaptchaResponse(response);
+  const handleTurnstileChange = (response: string | null) => {
+    console.log('Turnstile response:', response);
+    setTurnstileResponse(response);
     setIsVerified(!!response);
   };
 
@@ -49,7 +49,7 @@ export default function Contact() {
     setSubmitStatus('idle');
 
     try {
-      const response = await fetch('https://formspree.io/f/mpwkwnap', {
+      const response = await fetch('https://submit-form.com/80I8Vcg0Q', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export default function Contact() {
           name: formData.name,
           email: formData.email,
           message: formData.message,
-          'g-recaptcha-response': recaptchaResponse || '',
+          'cf-turnstile-response': turnstileResponse || '',
         }),
       });
 
@@ -67,7 +67,7 @@ export default function Contact() {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', message: '' });
         setIsVerified(false);
-        setRecaptchaResponse(null);
+        setTurnstileResponse(null);
         setTimeout(() => setSubmitStatus('idle'), 5000);
       } else {
         const errorData = await response.json();
@@ -134,7 +134,7 @@ export default function Contact() {
                 </div>
 
                 <div className="lg:pl-4 lg:pl-10">
-                  <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+                  <form action="https://submit-form.com/80I8Vcg0Q" method="POST" onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                     <div>
                       <input
                         type="text"
@@ -173,18 +173,17 @@ export default function Contact() {
                       />
                     </div>
 
-                    <div className="recaptcha-container py-2 sm:py-3 md:py-4">
+                    <div className="turnstile-container py-2 sm:py-3 md:py-4">
                       <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
-                      {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? (
-                        <ReCAPTCHA
-                          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                          onChange={handleRecaptchaChange}
+                      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
+                        <Turnstile
+                          sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                          onSuccess={handleTurnstileChange}
                           theme="light"
-                          size="normal"
                         />
                       ) : (
                         <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">
-                          ⚠️ reCAPTCHA not configured. Please check environment variables.
+                          ⚠️ Turnstile not configured. Please check environment variables.
                         </div>
                       )}
                     </div>
