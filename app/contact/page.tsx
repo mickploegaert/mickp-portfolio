@@ -177,7 +177,7 @@ export default function Contact() {
                       <div className="text-xs text-gray-500 mb-2">Please complete the verification below</div>
                       {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
                         <Turnstile
-                          sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                           onSuccess={handleTurnstileChange}
                           theme="light"
                         />
