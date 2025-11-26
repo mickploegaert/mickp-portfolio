@@ -179,7 +179,6 @@ export default function Contact() {
                         <Turnstile
                           siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                           onSuccess={handleTurnstileChange}
-                          theme="light"
                         />
                       ) : (
                         <div className="p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">
