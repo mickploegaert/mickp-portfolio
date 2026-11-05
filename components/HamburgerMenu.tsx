@@ -1,34 +1,33 @@
 "use client";
 
-import { useState } from 'react';
+import { scrollToSection } from "../lib/navigation";
 
-export default function HamburgerMenu({ navItems, isOpen, onClose }: {
+export default function HamburgerMenu({
+  navItems,
+  isOpen,
+  onToggle,
+  onClose,
+}: {
   navItems: Array<{ href: string; label: string }>;
   isOpen: boolean;
+  onToggle: () => void;
   onClose: () => void;
 }) {
-  const handleNavClick = (href: string) => {
-    if (href.startsWith('/#')) {
-      const elementId = href.replace('/#', '');
-      const element = document.getElementById(elementId);
-      if (element) {
-        const offset = 80;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - offset;
-        
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (scrollToSection(href)) {
+      e.preventDefault();
     }
     onClose();
   };
+
   return (
     <div className="relative">
       <button
+        type="button"
         aria-label={isOpen ? "Close menu" : "Open menu"}
-        onClick={() => onClose()}
+        aria-expanded={isOpen}
+        aria-controls="mobile-nav"
+        onClick={onToggle}
         className={`group relative grid place-items-center w-8 h-8 sm:w-10 sm:h-12 rounded-full bg-black text-white shadow-lg transition-transform duration-300 ease-out ${isOpen ? "rotate-45" : "hover:scale-105"}`}
       >
         <svg
@@ -61,35 +60,32 @@ export default function HamburgerMenu({ navItems, isOpen, onClose }: {
         </svg>
       </button>
 
-      <div className="absolute right-0 top-full mt-3 overflow-visible pointer-events-none">
+      <div className="absolute right-0 top-full mt-3">
         <div
-          className={`origin-top-right rounded-xl bg-white shadow-2xl overflow-hidden transition-all duration-300 ease-out pointer-events-auto ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
-          style={{ 
-            border: '1px solid rgba(0,0,0,0.08)',
-            pointerEvents: isOpen ? 'auto' : 'none'
-          }}
+          id="mobile-nav"
+          inert={isOpen ? undefined : true}
+          aria-hidden={!isOpen}
+          className={`origin-top-right rounded-xl bg-white shadow-2xl overflow-hidden transition-opacity duration-300 ease-out ${
+            isOpen ? "opacity-100" : "invisible opacity-0"
+          }`}
+          style={{ border: "1px solid rgba(0,0,0,0.08)" }}
         >
-          <nav className="flex flex-col py-2 px-1 text-black">
-            {navItems.map((item, idx) => (
+          <div className="flex flex-col py-2 px-1 text-black">
+            {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="rounded-lg px-4 py-3 sm:px-6 sm:py-3.5 text-sm sm:text-base lg:text-[18px] font-bold hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
+                className="rounded-lg px-4 py-3 sm:px-6 sm:py-3.5 text-sm sm:text-base font-bold hover:bg-gray-100 active:bg-gray-200 transition-all duration-200"
                 style={{
-                  letterSpacing: '-0.06em',
-                  fontFamily: 'Inter, sans-serif',
+                  letterSpacing: "-0.06em",
                   fontWeight: 700,
-                  transitionDelay: isOpen ? `${(idx + 1) * 80}ms` : '0ms',
-                  opacity: isOpen ? 1 : 0,
-                  transform: isOpen ? 'translateX(0)' : 'translateX(16px)',
-                  transitionProperty: 'opacity, transform, background-color'
                 }}
-                onClick={() => handleNavClick(item.href)}
+                onClick={(e) => handleNavClick(e, item.href)}
               >
                 {item.label}
               </a>
             ))}
-          </nav>
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { contactEmail } from '../lib/site';
 
 interface DiscordUser {
   id: string;
@@ -166,16 +167,9 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
             throw new Error(data.message || 'API returned error');
           }
         })
-        .catch(err => {
-          console.error('Fetch error:', err);
+        .catch(() => {
           if (isMounted) {
-            if (err.message.includes('CORS')) {
-              setError('CORS error - please check browser console');
-            } else if (err.message.includes('Failed to fetch')) {
-              setError('Network error - please check connection');
-            } else {
-              setError(`Failed to load Discord data: ${err.message}`);
-            }
+            setError("Failed to load Discord data");
             setLoading(false);
           }
         });
@@ -344,7 +338,7 @@ export default function DiscordLanyard({ userId = '719831189585657877' }: { user
                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                243338@student.scalda.nl
+                {contactEmail}
               </div>
             </div>
           </div>
@@ -414,9 +408,6 @@ function ActivityItem({ activity, formatElapsedTime, getActivityIcon }: {
                    activity.application_id === '793278139363549194'; // VS Code ID
 
   if (isCoding) {
-    const fileName = activity.details || '';
-    const workspaceName = activity.state || '';
-    
     return (
       <div className="p-4 transition-colors duration-200 border-t border-gray-300 relative overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="code-tags-bg">
@@ -441,18 +432,6 @@ function ActivityItem({ activity, formatElapsedTime, getActivityIcon }: {
                   Coding in {activity.name}
                 </div>
               </div>
-              
-              {fileName && (
-                <div className="text-sm text-gray-800 font-mono bg-white/60 px-2 py-1 rounded mb-2 border border-gray-200">
-                  📄 {fileName}
-                </div>
-              )}
-              
-              {workspaceName && (
-                <div className="text-xs text-gray-600 mb-2">
-                  📁 {workspaceName}
-                </div>
-              )}
               
               {activity.timestamps?.start && (
                 <div className="flex items-center gap-1 text-xs text-gray-600">

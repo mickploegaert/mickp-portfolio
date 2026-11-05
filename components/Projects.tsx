@@ -1,136 +1,86 @@
-"use client";
+const projects = [
+  {
+    number: "01",
+    title: "Axelfest",
+    href: "https://axelfest.nl",
+    image: "/projects/axelfest.jpg",
+    label: "Festival",
+    text: "Ticket sales stay fast when the drop hits.",
+  },
+  {
+    number: "02",
+    title: "MK Studios",
+    href: "https://mkstudios.vercel.app/",
+    image: "/projects/mkstudios.jpg",
+    label: "Studio",
+    text: "Visitors can drag and turn the 3D models.",
+  },
+];
+
+const steps = [
+  { number: "01", title: "Plan", text: "Decide what the site needs to do." },
+  { number: "02", title: "Design", text: "Settle type, spacing, and the screens." },
+  { number: "03", title: "Build", text: "Put it together in Next.js and check it in the browser." },
+  { number: "04", title: "Deploy", text: "Ship a link someone can open." },
+];
 
 export default function Projects() {
   return (
-    <section id="projects" className="min-h-screen bg-white py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 sm:mb-12" style={{ animation: 'slideUpFade 0.8s ease-out both' }}>
-          <h2 
-            className="text-[clamp(2rem,6vw,4rem)] sm:text-[clamp(2.5rem,6vw,5rem)] md:text-[clamp(3rem,6vw,6rem)] lg:text-[clamp(3.5rem,6vw,7rem)] xl:text-[clamp(4rem,6vw,8rem)] font-black text-black"
-            style={{ 
-              fontFamily: 'Inter, sans-serif', 
-              letterSpacing: '-0.08em' 
-            }}
-          >
-            Projects
-          </h2>
+    <section id="projects" className="scroll-mt-24 border-t border-black/10 px-6 py-24 sm:px-10 sm:py-32 lg:px-16 xl:px-24">
+      <div className="mx-auto max-w-7xl">
+        <p className="mb-4 text-[11px] font-semibold tracking-[0.42em] text-brand uppercase">Selected work</p>
+        <h2 className="mb-12 max-w-3xl font-[family-name:var(--font-display)] text-4xl leading-tight font-bold tracking-tight text-[#071433] sm:text-5xl">
+          Projects
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {projects.map((project) => (
+            <a
+              key={project.title}
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block overflow-hidden border border-black/10 bg-white shadow-[0_22px_50px_-32px_rgba(7,20,51,0.45)]"
+            >
+              <div className="aspect-[16/10] overflow-hidden bg-[#071433]">
+                <img
+                  src={project.image}
+                  alt={`${project.title} homepage`}
+                  width={1440}
+                  height={900}
+                  className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="p-5 sm:p-6">
+                <p className="text-[10px] font-bold tracking-[0.2em] text-[#071433]/45 uppercase">
+                  {project.number} — {project.label}
+                </p>
+                <h3 className="mt-2 text-xl font-bold tracking-tight text-[#071433]">{project.title}</h3>
+                <p className="mt-2 text-sm text-[#071433]/60">{project.text}</p>
+                <span className="mt-4 inline-block text-[10px] font-bold tracking-[0.2em] text-brand uppercase">
+                  View live site
+                </span>
+              </div>
+            </a>
+          ))}
         </div>
 
-        {/* Asymmetrical Grid - 2 Large Top, 2 Small Bottom */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {/* Row 1: 2 Large Images */}
-          <button 
-            className="relative overflow-hidden cursor-pointer group bg-gray-100"
-            style={{ 
-              animation: 'slideUpFade 0.8s ease-out 0.2s both',
-              aspectRatio: '1/1'
-            }}
-            onClick={() => window.open('https://stirring-maamoul-29f058.netlify.app', '_blank')}
-            aria-label="Open Health Advisor App project"
-          >
-            <img
-              src="https://picsum.photos/600/600?seed=healthapp"
-              alt="Health Advisor App"
-              width={600}
-              height={600}
-              loading="lazy"
-              className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className="text-[clamp(1rem,4vw,1.5rem)] sm:text-[clamp(1.2rem,4vw,1.8rem)] md:text-[clamp(1.4rem,4vw,2.1rem)] lg:text-[clamp(1.6rem,4vw,2.4rem)] font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Health Advisor App
-              </h3>
-            </div>
-          </button>
-
-          <button 
-            className="relative overflow-hidden cursor-pointer group bg-gray-100"
-            style={{ 
-              animation: 'slideUpFade 0.8s ease-out 0.3s both',
-              aspectRatio: '1/1'
-            }}
-            onClick={() => window.open('https://resplendent-queijadas-1822c3.netlify.app/', '_blank')}
-            aria-label="Open Dropship Dashboard project"
-          >
-            <img
-              src="https://picsum.photos/600/600?seed=dropship"
-              alt="Dropship Dashboard"
-              width={600}
-              height={600}
-              loading="lazy"
-              className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className="text-[clamp(1rem,4vw,1.5rem)] sm:text-[clamp(1.2rem,4vw,1.8rem)] md:text-[clamp(1.4rem,4vw,2.1rem)] lg:text-[clamp(1.6rem,4vw,2.4rem)] font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Dropship Dashboard
-              </h3>
-            </div>
-          </button>
-
-          {/* Row 2: 2 Small Images */}
-          <button 
-            className="relative overflow-hidden cursor-pointer group bg-gray-100"
-            style={{ 
-              animation: 'slideUpFade 0.8s ease-out 0.4s both',
-              aspectRatio: '1/1'
-            }}
-            onClick={() => window.open('https://github.com', '_blank')}
-            aria-label="Open Task Manager project"
-          >
-            <img
-              src="https://picsum.photos/600/600?seed=taskmanager"
-              alt="Task Manager"
-              width={600}
-              height={600}
-              loading="lazy"
-              className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className="text-[clamp(1rem,4vw,1.5rem)] sm:text-[clamp(1.2rem,4vw,1.8rem)] md:text-[clamp(1.4rem,4vw,2.1rem)] lg:text-[clamp(1.6rem,4vw,2.4rem)] font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Task Manager
-              </h3>
-            </div>
-          </button>
-
-          <button 
-            className="relative overflow-hidden cursor-pointer group bg-gray-100"
-            style={{ 
-              animation: 'slideUpFade 0.8s ease-out 0.5s both',
-              aspectRatio: '1/1'
-            }}
-            onClick={() => window.open('https://github.com', '_blank')}
-            aria-label="Open Social Media Clone project"
-          >
-            <img
-              src="https://picsum.photos/600/600?seed=socialmedia"
-              alt="Social Media Clone"
-              width={600}
-              height={600}
-              loading="lazy"
-              className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-90"
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-black/90 to-transparent">
-              <h3 className="text-[clamp(1rem,4vw,1.5rem)] sm:text-[clamp(1.2rem,4vw,1.8rem)] md:text-[clamp(1.4rem,4vw,2.1rem)] lg:text-[clamp(1.6rem,4vw,2.4rem)] font-bold text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Social Media Clone
-              </h3>
-            </div>
-          </button>
+        <div className="mt-20 border-t border-black/10 pt-16">
+          <p className="mb-10 text-[11px] font-semibold tracking-[0.42em] text-[#071433]/45 uppercase">The process</p>
+          <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step) => (
+              <li key={step.number} className="group flex items-start gap-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-black/20 text-sm font-bold text-brand transition-colors duration-300 group-hover:border-brand group-hover:bg-brand group-hover:text-white">
+                  {step.number}
+                </span>
+                <span>
+                  <span className="block text-lg font-bold tracking-wide text-[#071433] uppercase">{step.title}</span>
+                  <span className="mt-2 block text-sm leading-relaxed text-[#071433]/55">{step.text}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes slideUpFade {
-          from {
-            opacity: 0;
-            transform: translateY(60px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </section>
   );
 }

@@ -1,107 +1,129 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import HamburgerMenu from './HamburgerMenu';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { scrollToSection } from "../lib/navigation";
+
+const navItems = [
+  { href: "/#projects", label: "Projects" },
+  { href: "/#about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const rawPathname = usePathname();
-  const pathname = rawPathname ?? ''; // default to empty string if null
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname() ?? "";
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navItems = [
-    { href: "/#projects", label: "Projects" },
-    { href: "/#about", label: "About" },
-    { href: "/contact", label: "Contact" },
-  ];
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith('/#')) {
-      e.preventDefault();
-      const elementId = href.replace('/#', '');
-      const element = document.getElementById(elementId);
-      if (element) {
-        const offset = 80;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - offset;
-        
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
-    }
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  const handleNavClick = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (scrollToSection(href)) event.preventDefault();
+    setOpen(false);
   };
 
   return (
-    <nav className={`sticky top-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-4 md:px-6 pt-2 pb-1 transition-all duration-200 ${
-      pathname === '/contact' || pathname.startsWith('/contact') 
-        ? 'bg-white/90 backdrop-blur-sm'
-        : scrolled ? 'bg-white/90 backdrop-blur-sm shadow-sm' : 'bg-transparent'
-    }`}>
-      {/* Logo */}
-      <div 
-        className="text-lg sm:text-xl md:text-2xl lg:text-[32px] text-black hover:opacity-70 transition-opacity duration-200 cursor-pointer"
-        style={{ 
-          fontFamily: 'Inter, sans-serif', 
-          letterSpacing: '-0.06em', 
-          fontWeight: 700
-        }}
-        onClick={() => window.location.href = '/'}
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? "border-b border-black/10 bg-[#f4f5f7]/90 shadow-[0_8px_32px_rgba(7,20,51,0.04)] backdrop-blur-xl"
+            : "bg-transparent"
+        }`}
       >
-        MICKP
-      </div>
-
-      {/* Desktop Navigation links */}
-      <div className="hidden md:flex gap-4 lg:gap-8">
-        {navItems.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            onClick={(e) => handleNavClick(e, item.href)}
-            className="relative text-base sm:text-lg md:text-xl lg:text-[32px] text-black hover:opacity-70 transition-all duration-200"
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              letterSpacing: '-0.06em',
-              fontWeight: 700,
-            }}
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6 sm:px-10 lg:px-16">
+          <Link
+            href="/"
+            className="font-[family-name:var(--font-brand)] text-[13px] font-semibold tracking-[0.22em] text-[#071433] uppercase"
           >
-            {item.label}
-          </a>
-        ))}
-      </div>
+            Mick Ploegaert
+          </Link>
 
-      {/* Mobile menu */}
-      <div className="md:hidden">
-        <HamburgerMenu 
-          navItems={navItems}
-          isOpen={mobileMenuOpen}
-          onClose={() => setMobileMenuOpen(!mobileMenuOpen)}
+          <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={(event) => handleNavClick(event, item.href)}
+                className="text-[11px] font-bold tracking-[0.22em] text-[#071433]/70 uppercase transition-colors hover:text-brand"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <button
+            type="button"
+            className="relative z-[60] flex h-10 w-10 items-center justify-center border border-black/20 transition-colors hover:border-brand md:hidden"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            onClick={() => setOpen((value) => !value)}
+          >
+            <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
+            <span className="flex w-5 flex-col gap-1.5">
+              <span className={`block h-0.5 bg-[#071433] transition-transform ${open ? "translate-y-2 rotate-45" : ""}`} />
+              <span className={`block h-0.5 bg-[#071433] transition-opacity ${open ? "opacity-0" : ""}`} />
+              <span className={`block h-0.5 w-3/4 bg-[#071433] transition-transform ${open ? "w-full -translate-y-2 -rotate-45" : ""}`} />
+            </span>
+          </button>
+        </div>
+      </header>
+
+      {open && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="fixed inset-0 z-40 bg-[#071433]/40 md:hidden"
+          onClick={() => setOpen(false)}
         />
-      </div>
+      )}
 
-      <style jsx>{`
-        @keyframes slideUpFade {
-          from {
-            opacity: 0;
-            transform: translateY(60px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-    </nav>
+      <div
+        id="mobile-nav"
+        inert={open ? undefined : true}
+        aria-hidden={!open}
+        className={`fixed inset-y-0 right-0 z-[55] flex w-[min(100%,24rem)] flex-col justify-center border-l border-black/10 bg-white px-8 transition-transform duration-500 md:hidden ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <nav className="flex flex-col items-start gap-2" aria-label="Mobile">
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={(event) => handleNavClick(event, item.href)}
+              className="font-[family-name:var(--font-brand)] py-2 text-4xl font-medium tracking-tight text-[#071433]/70 transition-colors hover:text-[#071433]"
+            >
+              {item.label}
+            </a>
+          ))}
+          <a
+            href="/contact"
+            onClick={() => setOpen(false)}
+            className="mt-8 inline-flex border border-[#071433] px-8 py-4 text-xs font-bold tracking-[0.2em] text-[#071433] uppercase transition-colors hover:border-brand hover:bg-brand hover:text-white"
+          >
+            Contact
+          </a>
+        </nav>
+      </div>
+    </>
   );
 }
